@@ -1,11 +1,10 @@
 use {
     macroquad::prelude::*,
-    crate::{
-        atlas_serialization::TreeType,
-        tilemap::Tilemap
-    },
     std::collections::HashMap
 };
+
+use crate::core_subsystems::atlas_serialization::TreeType;
+use crate::core_subsystems::tilemap::Tilemap;
 
 pub struct Forest {
     pub corner_tree_data: Vec<TreeType>,

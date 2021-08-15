@@ -1,13 +1,14 @@
 use {
     macroquad::prelude::*,
-    crate::atlas_serialization::*,
-    crate::types::*,
-    simple_tiled_wfc::grid_generation::{WfcModule, WfcContext, WfcContextBuilder},
+    simple_tiled_wfc::grid_generation::{WfcContext, WfcContextBuilder, WfcModule},
     std::{
-        sync::mpsc::channel,
-        sync::Arc
+        sync::Arc,
+        sync::mpsc::channel
     }
 };
+
+use crate::core_subsystems::atlas_serialization::*;
+use crate::core_subsystems::types::*;
 
 pub struct Tilemap {
     pub w: usize,

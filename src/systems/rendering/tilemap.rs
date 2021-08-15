@@ -1,5 +1,5 @@
-use crate::types::GlobalStorage;
-use crate::rendering::{DrawCommand, DrawCommandExtra};
+use crate::core_subsystems::types::GlobalStorage;
+use crate::core_subsystems::rendering::{DrawCommand, DrawCommandExtra};
 
 pub fn system(world: &mut hecs::World) {
     for (_, data) in world.query_mut::<(&mut GlobalStorage,)>() {

@@ -1,5 +1,5 @@
 use macroquad::prelude::*;
-use crate::atlas_serialization::*;
+use crate::core_subsystems::atlas_serialization::*;
 use std::cmp::Ordering;
 
 #[derive(Copy, Clone)]
@@ -27,20 +27,19 @@ pub struct DrawCommand {
 }
 
 pub struct SceneCompositor {
-    draw_scale: f32,
     commands: Vec<DrawCommand>,
 }
 
 impl SceneCompositor {
-    pub fn new(draw_scale: f32) -> Self {
-        Self { draw_scale, commands: Vec::new() }
+    pub fn new() -> Self {
+        Self { commands: Vec::new() }
     }
 
     pub fn enqueue(&mut self, command: DrawCommand) {
         self.commands.push(command);
     }
 
-    pub fn flush_drawing_queue(&mut self, scene_width: usize, scene_height: usize) {
+    pub fn flush_drawing_queue(&mut self, scene_width: usize, scene_height: usize, draw_scale: f32) {
         self.commands.sort_by(|lhs, rhs| {
             match lhs.sorting_layer.cmp(&rhs.sorting_layer) {
                 Ordering::Less => Ordering::Less,
@@ -69,10 +68,10 @@ impl SceneCompositor {
         } = unsafe { get_internal_gl() };
 
         let start_x = screen_width() / ctx.dpi_scale();
-        let start_x = (start_x - (scene_width) as f32 * self.draw_scale) / 2.0;
+        let start_x = (start_x - (scene_width) as f32 * draw_scale) / 2.0;
 
         let start_y = screen_height() / ctx.dpi_scale();
-        let start_y = (start_y - (scene_height) as f32 * self.draw_scale) / 2.0;
+        let start_y = (start_y - (scene_height) as f32 * draw_scale) / 2.0;
 
         for command in self.commands.iter() {
             match command.drawing_extra {
@@ -80,18 +79,18 @@ impl SceneCompositor {
                     draw_subrect(
                         command.tex,
                         command.subrect,
-                        start_x + command.x * self.draw_scale,
-                        start_y + command.y * self.draw_scale,
-                        command.scale * self.draw_scale,
+                        start_x + command.x * draw_scale,
+                        start_y + command.y * draw_scale,
+                        command.scale * draw_scale,
                     )
                 }
                 DrawCommandExtra::DrawWithPivot { pivot } => {
                     draw_subrect_pivoted(
                         command.tex,
                         command.subrect,
-                        start_x + command.x * self.draw_scale,
-                        start_y + command.y * self.draw_scale,
-                        command.scale * self.draw_scale,
+                        start_x + command.x * draw_scale,
+                        start_y + command.y * draw_scale,
+                        command.scale * draw_scale,
                         0.0,
                         pivot,
                     )
@@ -100,9 +99,9 @@ impl SceneCompositor {
                     draw_subrect_pivoted(
                         command.tex,
                         command.subrect,
-                        start_x + command.x,
-                        start_y + command.y,
-                        command.scale,
+                        start_x + command.x * draw_scale,
+                        start_y + command.y * draw_scale,
+                        command.scale * draw_scale,
                         rotation,
                         pivot,
                     )
