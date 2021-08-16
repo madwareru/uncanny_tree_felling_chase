@@ -535,6 +535,7 @@ AtlasDefinition(
             outer_type: Water
         )
     ],
+    generate_in_progress_subrect: SubRect (x: 0, y: 768, width: 896, height: 128),
     play_button_subrect: SubRect (x: 0, y: 896, width: 512, height: 256),
     exit_button_subrect: SubRect (x: 512, y: 896, width: 512, height: 256),
     red_button_subrect: SubRect (x: 1024, y: 896, width: 512, height: 256),

@@ -64,10 +64,10 @@ pub struct TerrainTilesConfig {
 
 #[derive(Copy, Clone, Debug, Deserialize)]
 pub struct SubRect {
-    pub x: i32,
-    pub y: i32,
-    pub width: i32,
-    pub height: i32,
+    pub x: usize,
+    pub y: usize,
+    pub width: usize,
+    pub height: usize,
 }
 
 #[derive(Clone, Deserialize)]
@@ -96,6 +96,7 @@ pub struct AtlasDefinition {
 
     pub terrain_tile_configs: Vec<TerrainTilesConfig>,
 
+    pub generate_in_progress_subrect: SubRect,
     pub play_button_subrect: SubRect,
     pub exit_button_subrect: SubRect,
     pub red_button_subrect: SubRect,

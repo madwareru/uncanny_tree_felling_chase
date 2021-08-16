@@ -1,0 +1,23 @@
+UnitsConfig(
+    tree_health: {
+        Bush: 200,
+        Pine: 1000,
+        Oak: 1800,
+    },
+    orcs: {
+        HugeOrc: OrcConfig(
+            price: 500,
+            movement_speed: 7,
+            turn_speed: 30,
+            damage: 50,
+            ability: Some(Repulsion)
+        ),
+        SmallOrc: OrcConfig(
+            price: 100,
+            movement_speed: 20,
+            turn_speed: 65,
+            damage: 5,
+            ability: None
+        ),
+    }
+)

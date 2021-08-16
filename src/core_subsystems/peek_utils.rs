@@ -24,7 +24,7 @@ pub fn peek_tile_ext(global_ctx: &GlobalContext, scale: f32) -> (i32, i32) {
     let screen_height_in_tiles = screen_height() / ctx.dpi_scale() / true_tile_h;
 
     (
-        (tile_x - (screen_width_in_tiles - global_ctx.tilemap.borrow().w as f32) / 2.0).trunc() as i32,
-        (tile_y - (screen_height_in_tiles - global_ctx.tilemap.borrow().h as f32) / 2.0).trunc() as i32
+        (tile_x - (screen_width_in_tiles - global_ctx.tilemap.borrow().w as f32 / scale) / 2.0).trunc() as i32,
+        (tile_y - (screen_height_in_tiles - global_ctx.tilemap.borrow().h as f32 / scale) / 2.0).trunc() as i32
     )
 }

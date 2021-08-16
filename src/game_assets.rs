@@ -5,14 +5,19 @@ use {
     std::sync::Arc
 };
 use macroquad::miniquad::Context;
+use crate::core_subsystems::atlas_serialization::AtlasDefinition;
+use crate::core_subsystems::units_serialization::UnitsConfig;
 
 const ATLAS_DEFINITION_BYTES: &[u8] = include_bytes!("../assets/atlas_definition.ron");
+const UNITS_CONFIG_BYTES: &[u8] = include_bytes!("../assets/units_config.ron");
+
 const ATLAS_BYTES: &[u8] = include_bytes!("../assets/main_atlas.png");
 const UI_ATLAS_BYTES: &[u8] = include_bytes!("../assets/user_interface_atlas.png");
 const PASSABILITY_MAP_BYTES: &[u8] = include_bytes!("../assets/passability_map.png");
 
 pub struct GameAssets {
-    pub atlas_definition: Arc<crate::core_subsystems::atlas_serialization::AtlasDefinition>,
+    pub units_config: Arc<UnitsConfig>,
+    pub atlas_definition: Arc<AtlasDefinition>,
     pub atlas_texture: Texture2D,
     pub ui_atlas_texture: Texture2D,
     pub passability_atlas_width: usize,
@@ -44,7 +49,8 @@ impl GameAssets {
             passability_atlas_width,
             passability_atlas_height,
             passability_atlas,
-            atlas_definition: Arc::new(from_reader(ATLAS_DEFINITION_BYTES).unwrap())
+            atlas_definition: Arc::new(from_reader(ATLAS_DEFINITION_BYTES).unwrap()),
+            units_config: Arc::new(from_reader(UNITS_CONFIG_BYTES).unwrap())
         }
     }
 

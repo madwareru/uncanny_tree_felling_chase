@@ -11,8 +11,7 @@ pub enum Pivot {
 #[derive(Copy, Clone)]
 pub enum DrawCommandExtra {
     Draw,
-    DrawWithPivot { pivot: Pivot },
-    DrawWithPivotAndRotation { pivot: Pivot, rotation: f32 },
+    DrawWithPivot { pivot: Pivot }
 }
 
 #[derive(Copy, Clone)]
@@ -92,17 +91,6 @@ impl SceneCompositor {
                         start_y + command.y * draw_scale,
                         command.scale * draw_scale,
                         0.0,
-                        pivot,
-                    )
-                }
-                DrawCommandExtra::DrawWithPivotAndRotation { pivot, rotation } => {
-                    draw_subrect_pivoted(
-                        command.tex,
-                        command.subrect,
-                        start_x + command.x * draw_scale,
-                        start_y + command.y * draw_scale,
-                        command.scale * draw_scale,
-                        rotation,
                         pivot,
                     )
                 }

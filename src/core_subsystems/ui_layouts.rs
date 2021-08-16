@@ -1,5 +1,5 @@
 use crate::core_subsystems::types::{GlobalContext, MenuScreen, Fraction};
-use crate::components::{MenuScreenElement, MenuBackgroundTag, UiRect, SignalButton, PlayGameSignal, ExitGameSignal, Glyph, ChoosePlayerFractionSignal, GoToMainMenuSignal, NumberTag, BudgetTitleTag, BudgetDigitTag, FinishPlayerLandingSignal, SelectionTag};
+use crate::components::{MenuScreenElement, MenuBackgroundTag, UiRect, SignalButton, PlayGameSignal, ExitGameSignal, Glyph, ChoosePlayerFractionSignal, GoToMainMenuSignal, NumberTag, BudgetTitleTag, BudgetDigitTag, FinishPlayerLandingSignal, SelectionTag, ChooseUnitTypeDuringLanding, ToggleButtonTag};
 
 pub fn create_main_menu_screen(ctx: &GlobalContext) {
     ctx.world.borrow_mut().spawn((
@@ -117,9 +117,11 @@ pub fn create_player_landing_screen(ctx: &GlobalContext) {
         ));
     }
     ctx.world.borrow_mut().spawn((
+        ToggleButtonTag,
+        NumberTag(1),
         MenuScreenElement { menu_screen: MenuScreen::PlayerLanding },
         SignalButton {
-            signal_to_send: FinishPlayerLandingSignal,
+            signal_to_send: ChooseUnitTypeDuringLanding{ new_minion_is_big: true },
             glyph_sub_rect: ctx.atlas_definition.huge_axe_icon,
 
         },
@@ -129,10 +131,12 @@ pub fn create_player_landing_screen(ctx: &GlobalContext) {
         }
     ));
     ctx.world.borrow_mut().spawn((
+        ToggleButtonTag,
+        NumberTag(0),
         SelectionTag,
         MenuScreenElement { menu_screen: MenuScreen::PlayerLanding },
         SignalButton {
-            signal_to_send: FinishPlayerLandingSignal,
+            signal_to_send: ChooseUnitTypeDuringLanding{ new_minion_is_big: false },
             glyph_sub_rect: ctx.atlas_definition.small_axe_icon,
 
         },

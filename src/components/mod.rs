@@ -6,6 +6,7 @@ pub struct SignalTag;
 pub struct SelectionTag;
 pub struct BudgetDigitTag;
 pub struct BudgetTitleTag;
+pub struct ToggleButtonTag;
 
 #[derive(Copy, Clone)]
 pub struct UiRect {
@@ -70,7 +71,7 @@ impl Into<SignalCommand> for ChoosePlayerFractionSignal {
 
 #[derive(Copy, Clone)]
 pub struct ChooseUnitTypeDuringLanding {
-    is_big: bool
+    pub new_minion_is_big: bool
 }
 impl Into<SignalCommand> for ChooseUnitTypeDuringLanding {
     fn into(self) -> SignalCommand {

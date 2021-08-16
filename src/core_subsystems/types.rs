@@ -9,28 +9,30 @@ use crate::core_subsystems::tilemap::Tilemap;
 use std::cell::RefCell;
 use std::collections::VecDeque;
 use crate::components::{SignalCommand, SignalTag};
+use crate::core_subsystems::units_serialization::UnitsConfig;
 
 pub type CustomBitSet = [u8; 32];
 
 pub struct GlobalContext {
     pub atlas_definition: Arc<AtlasDefinition>,
-    pub atlas_texture: Texture2D,
-    pub forest: RefCell<Forest>,
-    pub tilemap: RefCell<Tilemap>,
-    pub ui_atlas_texture: Texture2D,
-    pub draw_scale: f32,
+    pub units_config: Arc<UnitsConfig>,
+
     pub game_state: RefCell<GameState>,
     pub scene_compositor: RefCell<SceneCompositor>,
     pub world: RefCell<hecs::World>,
     pub signal_command_buffer: RefCell<VecDeque<SignalCommand>>,
     pub entity_purgatory: RefCell<VecDeque<hecs::Entity>>,
+    pub forest: RefCell<Forest>,
+    pub tilemap: RefCell<Tilemap>,
+    pub passability_map: RefCell<Vec<u8>>,
+
+    pub atlas_texture: Texture2D,
+    pub ui_atlas_texture: Texture2D,
+    pub draw_scale: f32,
     pub passability_atlas_width: usize,
     pub passability_atlas_height: usize,
     pub passability_atlas: Vec<u8>,
-}
-
-impl GlobalContext {
-
+    pub passability_map_stride: usize,
 }
 
 impl GlobalContext {
@@ -109,14 +111,15 @@ pub enum GameState {
 #[derive(Copy, Clone, PartialEq)]
 pub enum BattleState {
     MapGeneration,
-    EnemyLanding,
     BattlePause,
     Defeat,
     Victory,
+    PreparePlayerLanding,
     PlayerLanding {
         budget: u32,
         current_minion_is_big: bool
     },
+    EnemyLanding,
     Simulation {
         red_score: u16,
         blue_score: u16
@@ -153,7 +156,8 @@ impl BattleState {
             BattleState::BattlePause => Some(MenuScreen::BattlePause),
             BattleState::Defeat => Some(MenuScreen::Defeat),
             BattleState::Victory => Some(MenuScreen::Victory),
-            BattleState::Simulation { .. } => Some(MenuScreen::BattleSimulation)
+            BattleState::Simulation { .. } => Some(MenuScreen::BattleSimulation),
+            BattleState::PreparePlayerLanding => None
         }
     }
 }

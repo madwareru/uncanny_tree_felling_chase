@@ -15,12 +15,8 @@ use crate::core_subsystems::ui_layouts::{
     create_player_landing_screen
 };
 use crate::core_subsystems::signal_utils::check_signal;
-use crate::components::{
-    ExitGameSignal,
-    PlayGameSignal,
-    GoToMainMenuSignal,
-    ChoosePlayerFractionSignal
-};
+use crate::components::{ExitGameSignal, PlayGameSignal, GoToMainMenuSignal, ChoosePlayerFractionSignal, ChooseUnitTypeDuringLanding};
+use crate::core_subsystems::rendering::{DrawCommand, DrawCommandExtra, Pivot};
 
 mod game_assets;
 mod core_subsystems;
@@ -41,18 +37,22 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() {
     let game_assets::GameAssets{
-        atlas_definition,
+        units_config, atlas_definition,
         atlas_texture,
         ui_atlas_texture,
         passability_atlas_width,
         passability_atlas_height,
         passability_atlas,
     } = game_assets::GameAssets::load();
+    const MAP_SIZE: [usize; 2] = [60, 40];
+
     clear_background(Color::new(0.12, 0.1, 0.15, 1.00));
 
     next_frame().await;
-    let mut tilemap = Tilemap::new(atlas_definition.clone(), 60, 40);
-    let mut forest = Forest::create(&tilemap);
+    let tilemap = Tilemap::new(atlas_definition.clone(), MAP_SIZE[0], MAP_SIZE[1]);
+    let forest = Forest::create(&tilemap);
+    let passability_map_stride = atlas_definition.tile_width * tilemap.w;
+    let passability_map = vec![0x00u8; passability_map_stride * tilemap.h * atlas_definition.tile_height];
 
     let scene_compositor = SceneCompositor::new();
 
@@ -61,9 +61,14 @@ async fn main() {
         passability_atlas_width,
         passability_atlas_height,
         passability_atlas,
+        passability_map_stride,
         draw_scale: 1.0 / 8.0,
-        atlas_definition: atlas_definition.clone(),
         ui_atlas_texture,
+
+        atlas_definition: atlas_definition.clone(),
+        units_config: units_config.clone(),
+
+        passability_map: RefCell::new(passability_map),
         tilemap: RefCell::new(tilemap),
         forest: RefCell::new(forest),
         scene_compositor: RefCell::new(scene_compositor),
@@ -118,41 +123,62 @@ async fn main() {
                 GameState::Battle { fraction, internal_state } => {
                     match internal_state {
                         BattleState::MapGeneration => {
-                            global_context.tilemap.borrow_mut().generate_new_map();
-                            global_context.forest.borrow_mut().plant_trees(
-                                &global_context.tilemap.borrow()
-                            );
-                            break 'state_search GameState::Battle {
-                                fraction: *fraction,
-                                internal_state: BattleState::EnemyLanding
-                            };
+                            const MINIMUM_TREE_AMOUNT: usize = 400;
+                            if !global_context.tilemap.borrow().is_busy() {
+                                global_context.tilemap.borrow_mut().generate_new_map();
+                            } else if global_context.tilemap.borrow_mut().poll() {
+                                global_context.forest.borrow_mut().plant_trees(
+                                    &global_context.tilemap.borrow()
+                                );
+                                if global_context.forest.borrow().total_planted() >= MINIMUM_TREE_AMOUNT {
+                                    break 'state_search GameState::Battle {
+                                        fraction: *fraction,
+                                        internal_state: BattleState::PreparePlayerLanding
+                                    };
+                                }
+                            }
+                            global_context.scene_compositor.borrow_mut().enqueue(DrawCommand {
+                                tex: global_context.ui_atlas_texture,
+                                subrect: global_context.atlas_definition.generate_in_progress_subrect,
+                                x: (global_context.tilemap.borrow().w / 2 * global_context.atlas_definition.tile_width) as f32,
+                                y: (global_context.tilemap.borrow().h / 2 * global_context.atlas_definition.tile_height) as f32,
+                                scale: 2.0,
+                                drawing_extra: DrawCommandExtra::DrawWithPivot {
+                                    pivot: Pivot::Relative {rel_x: 0.5, rel_y: 0.5},
+                                },
+                                sorting_layer: 20
+                            });
                         }
-                        BattleState::EnemyLanding => {
+                        BattleState::PreparePlayerLanding => {
                             exec_system! [gameplay::update_landing_ui];
-                            // todo: Land enemies
+                            exec_system! [gameplay::update_pasability_map];
                             break 'state_search GameState::Battle {
                                 fraction: *fraction,
                                 internal_state: BattleState::PlayerLanding {
-                                    budget: 1234567890,
+                                    budget: 100000,
                                     current_minion_is_big: false
                                 }
                             };
                         }
-                        BattleState::PlayerLanding { .. } => {
+                        BattleState::PlayerLanding { budget, .. } => {
+                            if let Some(signal) = check_signal::<ChooseUnitTypeDuringLanding>(&global_context) {
+                                break 'state_search GameState::Battle {
+                                    fraction: *fraction,
+                                    internal_state: BattleState::PlayerLanding {
+                                        budget: *budget,
+                                        current_minion_is_big: signal.new_minion_is_big
+                                    }
+                                };
+                            }
                             exec_system! [gameplay::update_landing_ui];
-
-
-                            exec_system! [rendering::player_landing_helper_grid];
+                        }
+                        BattleState::EnemyLanding => {
+                            // todo: Land enemies
                         }
                         BattleState::BattlePause => {}
                         BattleState::Defeat => {}
                         BattleState::Victory => {}
                         BattleState::Simulation { .. } => {}
-                    }
-
-                    if *internal_state != BattleState::MapGeneration {
-                        exec_system! [rendering::tilemap];
-                        exec_system! [rendering::forest];
                     }
 
                     break 'state_search GameState::Battle {
@@ -162,6 +188,18 @@ async fn main() {
                 }
             }
         };
+
+        match next_state {
+            GameState::Battle { internal_state: BattleState::MapGeneration, .. } => {}
+            GameState::Battle { internal_state, .. } => {
+                exec_system! [rendering::tilemap];
+                exec_system! [rendering::forest];
+                if let BattleState::PlayerLanding { .. } = internal_state {
+                    exec_system! [rendering::player_landing_helper_grid];
+                }
+            }
+            _ => {}
+        }
 
         *global_context.game_state.borrow_mut() = next_state;
 

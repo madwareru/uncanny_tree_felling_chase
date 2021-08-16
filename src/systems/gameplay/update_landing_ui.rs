@@ -1,11 +1,22 @@
-use crate::core_subsystems::types::{GlobalContext, GameState, Fraction, BattleState};
-use crate::components::{BudgetDigitTag, Glyph, BudgetTitleTag, NumberTag};
+use crate::core_subsystems::types::{GlobalContext, GameState, Fraction, BattleState, MenuScreen};
+use crate::components::{
+    BudgetDigitTag,
+    Glyph,
+    BudgetTitleTag,
+    NumberTag,
+    SelectionTag,
+    MenuScreenElement,
+    ToggleButtonTag
+};
 
 pub fn system(ctx: &GlobalContext) {
     if let GameState::Battle { fraction, internal_state } = *(ctx.game_state.borrow()) {
-        let budget = match internal_state {
-            BattleState::PlayerLanding { budget, .. } => budget,
-            _ => 0
+        let (budget, current_minion_is_big) = match internal_state {
+            BattleState::PlayerLanding {
+                budget,
+                current_minion_is_big
+            } => (budget, current_minion_is_big),
+            _ => (0, false)
         };
 
         for (_, (_, glyph)) in ctx.world.borrow_mut().query_mut::<(
@@ -29,5 +40,41 @@ pub fn system(ctx: &GlobalContext) {
                 Fraction::Blue => ctx.atlas_definition.blue_digit_glyph_subrects[digit_value],
             }
         }
+
+        let (old_selection_entity, old_selection_size) = ctx.world.borrow()
+            .query::<(&NumberTag, &SelectionTag, &MenuScreenElement, &ToggleButtonTag)>()
+            .iter()
+            .next()
+            .map(|(e, (&tag, _, menu_screen_element, _))|
+                (
+                    e,
+                    if menu_screen_element.menu_screen == MenuScreen::PlayerLanding && tag.0 == 0 {
+                        false
+                    } else {
+                        true
+                    }
+                )
+            )
+            .unwrap();
+
+        if old_selection_size != current_minion_is_big {
+            ctx.world.borrow_mut().remove::<(SelectionTag,)>(old_selection_entity).unwrap();
+
+            let new_selection_entity = ctx.world.borrow()
+                .query::<(&NumberTag, &MenuScreenElement, &ToggleButtonTag)>()
+                .iter()
+                .find_map(|(e, (&tag, menu_screen_element, _))|
+                    if menu_screen_element.menu_screen == MenuScreen::PlayerLanding &&
+                        (tag.0 == 0) == !current_minion_is_big {
+                        Some(e)
+                    } else {
+                        None
+                    }
+                )
+                .unwrap();
+
+            ctx.world.borrow_mut().insert(new_selection_entity, (SelectionTag,)).unwrap();
+        }
+
     }
 }

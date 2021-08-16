@@ -10,11 +10,13 @@ pub struct Forest {
     pub corner_tree_data: Vec<TreeType>,
     pub cell_tree_data: Vec<TreeType>,
     tree_probabilities: HashMap<TreeType, i32>,
+    total_planted: usize
 }
 
 impl Forest {
     pub fn create(tilemap: &Tilemap) -> Self {
         Self {
+            total_planted: 0,
             corner_tree_data: vec![TreeType::None; tilemap.w * tilemap.h],
             cell_tree_data: vec![TreeType::None; tilemap.w * tilemap.h],
             tree_probabilities: {
@@ -31,6 +33,7 @@ impl Forest {
         const FOREST_TILE_OFFSET_START: usize = 48;
         const FOREST_TILE_OFFSET_END: usize = 95;
 
+        self.total_planted = 0;
         self.cell_tree_data.fill(TreeType::None);
         self.corner_tree_data.fill(TreeType::None);
 
@@ -69,9 +72,13 @@ impl Forest {
 
     fn try_plant_cell_tree(&mut self, idx: usize) {
         self.cell_tree_data[idx] = self.try_plant();
+        self.total_planted += if self.cell_tree_data[idx] != TreeType::None { 1 } else { 0 };
     }
 
     fn try_plant_corner_tree(&mut self, idx: usize) {
         self.corner_tree_data[idx] = self.try_plant();
+        self.total_planted += if self.corner_tree_data[idx] != TreeType::None { 1 } else { 0 };
     }
+
+    pub fn total_planted(&self) -> usize { self.total_planted }
 }
