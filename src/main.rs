@@ -4,7 +4,14 @@ use{
 use core_subsystems::forest::Forest;
 use core_subsystems::rendering::SceneCompositor;
 use core_subsystems::tilemap::Tilemap;
-use core_subsystems::types::GlobalStorage;
+use core_subsystems::types::GlobalContext;
+use crate::components::{MenuBackgroundTag, UiRect, SignalButton, PlayGameSignal, ExitGameSignal, MenuScreenElement};
+use hecs::{World, Entity};
+use std::borrow::Borrow;
+use std::sync::Arc;
+use crate::core_subsystems::atlas_serialization::AtlasDefinition;
+use crate::core_subsystems::types::{MenuScreen, GameState};
+use std::cell::RefCell;
 
 mod game_assets;
 mod core_subsystems;
@@ -39,19 +46,23 @@ async fn main() {
 
     let scene_compositor = SceneCompositor::new();
 
-    let mut world = hecs::World::new();
-    world.spawn((GlobalStorage{
+    let mut global_context = GlobalContext {
         tilemap,
         forest,
-        scene_compositor,
         atlas_texture,
         draw_scale: 1.0 / 8.0,
         atlas_definition: atlas_definition.clone(),
-        ui_atlas_texture
-    },));
+        ui_atlas_texture,
+        scene_compositor: RefCell::new(scene_compositor),
+        world: RefCell::new(hecs::World::new()),
+        game_state: RefCell::new(GameState::MainMenu)
+    };
+
+    create_ui_screens(&mut global_context);
+
     macro_rules! exec_system {
         ($($namespace: ident)::*) => {
-            systems::$($namespace::)*system(&mut world);
+            systems::$($namespace::)*system(&global_context);
         }
     }
 
@@ -63,12 +74,47 @@ async fn main() {
         //exec_system! [rendering::tilemap];
         //exec_system! [rendering::forest];
 
-        exec_system! [debug_picking];
-
         exec_system! [rendering::ui_overlay_main];
-        exec_system! [rendering::ui_main_menu];
+        exec_system! [rendering::menu_screens];
 
         exec_system! [scene_composition];
         next_frame().await;
     }
+}
+
+fn create_ui_screens(ctx: &GlobalContext) {
+    create_main_menu_screen(ctx);
+}
+
+fn create_main_menu_screen(ctx: &GlobalContext) {
+    ctx.world.borrow_mut().spawn((
+        MenuScreenElement { menu_screen: MenuScreen::MainMenu },
+        MenuBackgroundTag,
+        UiRect {
+            top_left: (20, 13),
+            bottom_right: (ctx.tilemap.w as i32 - 21, 24)
+        }
+    ));
+    ctx.world.borrow_mut().spawn((
+        MenuScreenElement { menu_screen: MenuScreen::MainMenu },
+        SignalButton {
+            signal_to_send: PlayGameSignal,
+            glyph_sub_rect: ctx.atlas_definition.play_button_subrect
+        },
+        UiRect {
+            top_left: (22, 15),
+            bottom_right: (ctx.tilemap.w as i32 - 23, 18)
+        }
+    ));
+    ctx.world.borrow_mut().spawn((
+        MenuScreenElement { menu_screen: MenuScreen::MainMenu },
+        SignalButton {
+            signal_to_send: ExitGameSignal,
+            glyph_sub_rect: ctx.atlas_definition.exit_button_subrect
+        },
+        UiRect {
+            top_left: (22, 19),
+            bottom_right: (ctx.tilemap.w as i32 - 23, 22)
+        }
+    ));
 }
