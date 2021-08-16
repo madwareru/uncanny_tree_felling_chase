@@ -4,6 +4,8 @@ use crate::core_subsystems::atlas_serialization::SubRect;
 pub struct MenuBackgroundTag;
 pub struct SignalTag;
 pub struct SelectionTag;
+pub struct BudgetDigitTag;
+pub struct BudgetTitleTag;
 
 #[derive(Copy, Clone)]
 pub struct UiRect {
@@ -22,6 +24,7 @@ pub enum SignalCommand {
     PlayGame(PlayGameSignal),
     ChoosePlayerFraction(ChoosePlayerFractionSignal),
     ChooseUnitTypeDuringLanding(ChooseUnitTypeDuringLanding),
+    FinishPlayerLanding(FinishPlayerLandingSignal),
     GoToMainMenu(GoToMainMenuSignal),
     PauseGame(PauseGameSignal),
     UnpauseGame(UnpauseGameSignal),
@@ -76,6 +79,14 @@ impl Into<SignalCommand> for ChooseUnitTypeDuringLanding {
 }
 
 #[derive(Copy, Clone)]
+pub struct FinishPlayerLandingSignal;
+impl Into<SignalCommand> for FinishPlayerLandingSignal {
+    fn into(self) -> SignalCommand {
+        SignalCommand::FinishPlayerLanding(self)
+    }
+}
+
+#[derive(Copy, Clone)]
 pub struct GoToMainMenuSignal;
 impl Into<SignalCommand> for GoToMainMenuSignal {
     fn into(self) -> SignalCommand {
@@ -106,3 +117,6 @@ impl Into<SignalCommand> for ReplayGameSignal {
         SignalCommand::ReplayGame(self)
     }
 }
+
+#[derive(Copy, Clone)]
+pub struct NumberTag(pub u32);

@@ -1,5 +1,5 @@
 use crate::core_subsystems::types::{GlobalContext, MenuScreen};
-use crate::components::{UiRect, SignalButton, PlayGameSignal, ExitGameSignal, MenuScreenElement, ChoosePlayerFractionSignal, GoToMainMenuSignal, PauseGameSignal, UnpauseGameSignal, ChooseUnitTypeDuringLanding, ReplayGameSignal, SignalCommand};
+use crate::components::{UiRect, SignalButton, PlayGameSignal, ExitGameSignal, MenuScreenElement, ChoosePlayerFractionSignal, GoToMainMenuSignal, PauseGameSignal, UnpauseGameSignal, ChooseUnitTypeDuringLanding, ReplayGameSignal, SignalCommand, FinishPlayerLandingSignal};
 use crate::core_subsystems::peek_utils::peek_tile;
 use macroquad::input::{MouseButton, is_mouse_button_released};
 
@@ -13,6 +13,7 @@ pub fn system(ctx: &GlobalContext) {
         handle_signal_button_clicks::<UnpauseGameSignal>(ctx, menu_screen);
         handle_signal_button_clicks::<ChooseUnitTypeDuringLanding>(ctx, menu_screen);
         handle_signal_button_clicks::<ReplayGameSignal>(ctx, menu_screen);
+        handle_signal_button_clicks::<FinishPlayerLandingSignal>(ctx, menu_screen);
 
         fn handle_signal_button_clicks<TSignal: 'static + Copy + Clone + Send + Sync + Into<SignalCommand>>(
             ctx: &GlobalContext,

@@ -23,7 +23,10 @@ pub struct GlobalContext {
     pub scene_compositor: RefCell<SceneCompositor>,
     pub world: RefCell<hecs::World>,
     pub signal_command_buffer: RefCell<VecDeque<SignalCommand>>,
-    pub entity_purgatory: RefCell<VecDeque<hecs::Entity>>
+    pub entity_purgatory: RefCell<VecDeque<hecs::Entity>>,
+    pub passability_atlas_width: usize,
+    pub passability_atlas_height: usize,
+    pub passability_atlas: Vec<u8>,
 }
 
 impl GlobalContext {
@@ -72,6 +75,10 @@ impl GlobalContext {
                     SignalTag,
                     signal
                 )),
+                SignalCommand::FinishPlayerLanding(signal) => self.world.borrow_mut().spawn((
+                    SignalTag,
+                    signal
+                )),
             };
         }
 
@@ -107,6 +114,7 @@ pub enum BattleState {
     Defeat,
     Victory,
     PlayerLanding {
+        budget: u32,
         current_minion_is_big: bool
     },
     Simulation {

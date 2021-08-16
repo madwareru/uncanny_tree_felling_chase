@@ -7,22 +7,7 @@ use crate::systems::rendering::ui_shared::{
     render_hover_button_background,
     render_ui_selection
 };
-use crate::components::{
-    UiRect,
-    MenuBackgroundTag,
-    SignalButton,
-    PlayGameSignal,
-    ExitGameSignal,
-    MenuScreenElement,
-    ChoosePlayerFractionSignal,
-    GoToMainMenuSignal,
-    PauseGameSignal,
-    UnpauseGameSignal,
-    ChooseUnitTypeDuringLanding,
-    ReplayGameSignal,
-    Glyph,
-    SelectionTag
-};
+use crate::components::{UiRect, MenuBackgroundTag, SignalButton, PlayGameSignal, ExitGameSignal, MenuScreenElement, ChoosePlayerFractionSignal, GoToMainMenuSignal, PauseGameSignal, UnpauseGameSignal, ChooseUnitTypeDuringLanding, ReplayGameSignal, Glyph, SelectionTag, FinishPlayerLandingSignal};
 use crate::core_subsystems::peek_utils::peek_tile;
 use macroquad::input::{is_mouse_button_down, MouseButton};
 
@@ -68,7 +53,7 @@ pub fn system(ctx: &GlobalContext) {
                     drawing_extra: DrawCommandExtra::DrawWithPivot {
                         pivot: Pivot::Relative { rel_x: 0.5, rel_y: 0.5 }
                     },
-                    sorting_layer: 4,
+                    sorting_layer: 5,
                 }
             );
         }
@@ -81,6 +66,7 @@ pub fn system(ctx: &GlobalContext) {
         handle_signal_buttons::<UnpauseGameSignal>(ctx, menu_screen);
         handle_signal_buttons::<ChooseUnitTypeDuringLanding>(ctx, menu_screen);
         handle_signal_buttons::<ReplayGameSignal>(ctx, menu_screen);
+        handle_signal_buttons::<FinishPlayerLandingSignal>(ctx, menu_screen);
 
         fn handle_signal_buttons<TSignal: 'static + Copy + Clone + Send + Sync>(
             ctx: &GlobalContext,

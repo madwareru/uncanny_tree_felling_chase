@@ -15,6 +15,7 @@ pub struct Tilemap {
     pub h: usize,
     pub map_data: Vec<usize>,
     pub tiles: Vec<SubRect>,
+    pub tile_sides: Vec<TileSides>,
     modules: Vec<WfcModule<CustomBitSet>>
 }
 
@@ -207,6 +208,7 @@ impl Tilemap {
             w,
             h,
             tiles,
+            tile_sides,
             modules,
             map_data: vec![0; w * h],
         }

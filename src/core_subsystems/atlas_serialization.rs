@@ -105,9 +105,14 @@ pub struct AtlasDefinition {
     pub replay_button_subrect: SubRect,
     pub main_menu_button_subrect: SubRect,
     pub game_title_subrect: SubRect,
+    pub landing_title_subrect: SubRect,
     pub choose_your_side_title_subrect: SubRect,
-    pub victory_title_subrect: SubRect,
     pub defeat_title_subrect: SubRect,
+    pub victory_title_subrect: SubRect,
+    pub red_budget_title_subrect: SubRect,
+    pub blue_budget_title_subrect: SubRect,
+    pub red_digit_glyph_subrects: Vec<SubRect>,
+    pub blue_digit_glyph_subrects: Vec<SubRect>,
 
     pub ui_borders_3x3_0: SubRect,
     pub ui_borders_3x3_1: SubRect,
@@ -171,4 +176,8 @@ pub struct AtlasDefinition {
 
     pub small_axe_icon: SubRect,
     pub huge_axe_icon: SubRect,
+
+    pub selected_cell_subrect: SubRect,
+    pub blocked_cell_subrect: SubRect,
+    pub ok_cell_subrect: SubRect,
 }

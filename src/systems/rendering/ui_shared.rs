@@ -30,7 +30,7 @@ pub fn render_ui_selection(ctx: &GlobalContext, ui_rect: &UiRect) {
                 y: (ctx.atlas_definition.tile_height as i32 * j) as f32,
                 scale: 1.0,
                 drawing_extra: DrawCommandExtra::Draw,
-                sorting_layer: 5
+                sorting_layer: 4
             };
             ctx.scene_compositor.borrow_mut().enqueue(draw_command);
         }
@@ -127,7 +127,7 @@ fn render_box(ctx: &GlobalContext, ui_rect: &UiRect, box_sub_tiles: &[SubRect]) 
                 y: (ctx.atlas_definition.tile_height as i32 * j) as f32,
                 scale: 1.0,
                 drawing_extra: DrawCommandExtra::Draw,
-                sorting_layer: 2
+                sorting_layer: 3
             };
             ctx.scene_compositor.borrow_mut().enqueue(draw_command);
         }

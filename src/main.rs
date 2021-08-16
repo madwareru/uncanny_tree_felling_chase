@@ -5,22 +5,22 @@ use core_subsystems::forest::Forest;
 use core_subsystems::rendering::SceneCompositor;
 use core_subsystems::tilemap::Tilemap;
 use core_subsystems::types::GlobalContext;
-use crate::components::{
-    MenuBackgroundTag,
-    UiRect,
-    SignalButton,
-    PlayGameSignal,
-    ExitGameSignal,
-    MenuScreenElement,
-    SignalTag,
-    ChoosePlayerFractionSignal,
-    GoToMainMenuSignal,
-    Glyph
-};
-use crate::core_subsystems::types::{MenuScreen, GameState, BattleState, Fraction};
+use crate::core_subsystems::types::{ GameState, BattleState };
 use std::cell::{RefCell};
 use std::ops::Deref;
 use std::collections::VecDeque;
+use crate::core_subsystems::ui_layouts::{
+    create_main_menu_screen,
+    create_choose_fraction_screen,
+    create_player_landing_screen
+};
+use crate::core_subsystems::signal_utils::check_signal;
+use crate::components::{
+    ExitGameSignal,
+    PlayGameSignal,
+    GoToMainMenuSignal,
+    ChoosePlayerFractionSignal
+};
 
 mod game_assets;
 mod core_subsystems;
@@ -44,19 +44,23 @@ async fn main() {
         atlas_definition,
         atlas_texture,
         ui_atlas_texture,
+        passability_atlas_width,
+        passability_atlas_height,
+        passability_atlas,
     } = game_assets::GameAssets::load();
     clear_background(Color::new(0.12, 0.1, 0.15, 1.00));
 
     next_frame().await;
     let mut tilemap = Tilemap::new(atlas_definition.clone(), 60, 40);
     let mut forest = Forest::create(&tilemap);
-    tilemap.generate_new_map();
-    forest.plant_trees(&tilemap);
 
     let scene_compositor = SceneCompositor::new();
 
     let mut global_context = GlobalContext {
         atlas_texture,
+        passability_atlas_width,
+        passability_atlas_height,
+        passability_atlas,
         draw_scale: 1.0 / 8.0,
         atlas_definition: atlas_definition.clone(),
         ui_atlas_texture,
@@ -83,49 +87,32 @@ async fn main() {
             break;
         }
         clear_background(Color::new(0.12, 0.1, 0.15, 1.00));
+
         exec_system! [cleanup_signals];
-
-        //exec_system! [rendering::tilemap];
-        //exec_system! [rendering::forest];
-
         exec_system! [gameplay::button_system];
 
-        for (_, _) in global_context.world.borrow()
-            .query::<(&SignalTag, &ExitGameSignal)>()
-            .iter()
-        {
+        if check_signal::<ExitGameSignal>(&global_context).is_some() {
             break 'main_loop;
         }
 
         let next_state = 'state_search: loop {
             match global_context.game_state.borrow().deref() {
                 GameState::MainMenu => {
-                    for (_, _) in global_context.world.borrow()
-                        .query::<(&SignalTag, &PlayGameSignal)>()
-                        .iter()
-                    {
+                    if check_signal::<PlayGameSignal>(&global_context).is_some() {
                         break 'state_search GameState::FractionChoice;
                     }
                     break 'state_search GameState::MainMenu;
                 }
                 GameState::FractionChoice => {
-                    for (_, _) in global_context.world.borrow()
-                        .query::<(&SignalTag, &GoToMainMenuSignal)>()
-                        .iter()
-                    {
+                    if check_signal::<GoToMainMenuSignal>(&global_context).is_some() {
                         break 'state_search GameState::MainMenu;
                     }
-
-                    for (_, (_, signal)) in global_context.world.borrow()
-                        .query::<(&SignalTag, &ChoosePlayerFractionSignal)>()
-                        .iter()
-                    {
+                    if let Some(signal) = check_signal::<ChoosePlayerFractionSignal>(&global_context) {
                         break 'state_search GameState::Battle {
                             fraction: signal.fraction,
                             internal_state: BattleState::MapGeneration
                         };
                     }
-
                     break 'state_search GameState::FractionChoice;
                 }
                 GameState::Battle { fraction, internal_state } => {
@@ -141,15 +128,22 @@ async fn main() {
                             };
                         }
                         BattleState::EnemyLanding => {
+                            exec_system! [gameplay::update_landing_ui];
                             // todo: Land enemies
                             break 'state_search GameState::Battle {
                                 fraction: *fraction,
                                 internal_state: BattleState::PlayerLanding {
+                                    budget: 1234567890,
                                     current_minion_is_big: false
                                 }
                             };
                         }
-                        BattleState::PlayerLanding { .. } => {}
+                        BattleState::PlayerLanding { .. } => {
+                            exec_system! [gameplay::update_landing_ui];
+
+
+                            exec_system! [rendering::player_landing_helper_grid];
+                        }
                         BattleState::BattlePause => {}
                         BattleState::Defeat => {}
                         BattleState::Victory => {}
@@ -182,89 +176,5 @@ async fn main() {
 fn create_ui_screens(ctx: &GlobalContext) {
     create_main_menu_screen(ctx);
     create_choose_fraction_screen(ctx);
-}
-
-fn create_main_menu_screen(ctx: &GlobalContext) {
-    ctx.world.borrow_mut().spawn((
-        MenuScreenElement { menu_screen: MenuScreen::MainMenu },
-        MenuBackgroundTag,
-        UiRect {
-            top_left: (20, 13),
-            bottom_right: (ctx.tilemap.borrow().w as i32 - 21, 24)
-        }
-    ));
-    ctx.world.borrow_mut().spawn((
-        MenuScreenElement { menu_screen: MenuScreen::MainMenu },
-        SignalButton {
-            signal_to_send: PlayGameSignal,
-            glyph_sub_rect: ctx.atlas_definition.play_button_subrect
-        },
-        UiRect {
-            top_left: (22, 15),
-            bottom_right: (ctx.tilemap.borrow().w as i32 - 23, 18)
-        }
-    ));
-    ctx.world.borrow_mut().spawn((
-        MenuScreenElement { menu_screen: MenuScreen::MainMenu },
-        SignalButton {
-            signal_to_send: ExitGameSignal,
-            glyph_sub_rect: ctx.atlas_definition.exit_button_subrect
-        },
-        UiRect {
-            top_left: (22, 19),
-            bottom_right: (ctx.tilemap.borrow().w as i32 - 23, 22)
-        }
-    ));
-}
-
-fn create_choose_fraction_screen(ctx: &GlobalContext) {
-    ctx.world.borrow_mut().spawn((
-        MenuScreenElement { menu_screen: MenuScreen::FractionChoice },
-        Glyph { glyph_sub_rect: ctx.atlas_definition.choose_your_side_title_subrect},
-        UiRect {
-            top_left: (12, 11),
-            bottom_right: (ctx.tilemap.borrow().w as i32 - 13, 12)
-        }
-    ));
-    ctx.world.borrow_mut().spawn((
-        MenuScreenElement { menu_screen: MenuScreen::FractionChoice },
-        MenuBackgroundTag,
-        UiRect {
-            top_left: (12, 13),
-            bottom_right: (ctx.tilemap.borrow().w as i32 - 13, 24)
-        }
-    ));
-    ctx.world.borrow_mut().spawn((
-        MenuScreenElement { menu_screen: MenuScreen::FractionChoice },
-        SignalButton {
-            signal_to_send: ChoosePlayerFractionSignal{ fraction: Fraction::Red },
-            glyph_sub_rect: ctx.atlas_definition.red_button_subrect
-        },
-        UiRect {
-            top_left: (22 - 8, 15),
-            bottom_right: (37 - 8, 18)
-        }
-    ));
-    ctx.world.borrow_mut().spawn((
-        MenuScreenElement { menu_screen: MenuScreen::FractionChoice },
-        SignalButton {
-            signal_to_send: ChoosePlayerFractionSignal{ fraction: Fraction::Blue },
-            glyph_sub_rect: ctx.atlas_definition.blue_button_subrect
-        },
-        UiRect {
-            top_left: (22 + 8, 15),
-            bottom_right: (37 + 8, 18)
-        }
-    ));
-    ctx.world.borrow_mut().spawn((
-        MenuScreenElement { menu_screen: MenuScreen::FractionChoice },
-        SignalButton {
-            signal_to_send: GoToMainMenuSignal,
-            glyph_sub_rect: ctx.atlas_definition.back_button_subrect
-        },
-        UiRect {
-            top_left: (22, 19),
-            bottom_right: (37, 22)
-        }
-    ));
+    create_player_landing_screen(ctx);
 }
