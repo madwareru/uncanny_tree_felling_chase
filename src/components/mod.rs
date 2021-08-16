@@ -1,6 +1,5 @@
 use crate::core_subsystems::types::{MenuScreen, Fraction};
 use crate::core_subsystems::atlas_serialization::SubRect;
-use std::marker::PhantomData;
 
 pub struct MenuBackgroundTag;
 pub struct SignalTag;
@@ -52,7 +51,7 @@ impl Into<SignalCommand> for PlayGameSignal {
 
 #[derive(Copy, Clone)]
 pub struct ChoosePlayerFractionSignal {
-    fraction: Fraction
+    pub fraction: Fraction
 }
 impl Into<SignalCommand> for ChoosePlayerFractionSignal {
     fn into(self) -> SignalCommand {

@@ -8,7 +8,6 @@ use crate::core_subsystems::rendering::SceneCompositor;
 use crate::core_subsystems::tilemap::Tilemap;
 use std::cell::RefCell;
 use std::collections::VecDeque;
-use hecs::DynamicBundle;
 use crate::components::{SignalCommand, SignalTag};
 
 pub type CustomBitSet = [u8; 32];
@@ -16,17 +15,26 @@ pub type CustomBitSet = [u8; 32];
 pub struct GlobalContext {
     pub atlas_definition: Arc<AtlasDefinition>,
     pub atlas_texture: Texture2D,
-    pub forest: Forest,
-    pub tilemap: Tilemap,
+    pub forest: RefCell<Forest>,
+    pub tilemap: RefCell<Tilemap>,
     pub ui_atlas_texture: Texture2D,
     pub draw_scale: f32,
     pub game_state: RefCell<GameState>,
     pub scene_compositor: RefCell<SceneCompositor>,
     pub world: RefCell<hecs::World>,
-    pub signal_command_buffer: RefCell<VecDeque<SignalCommand>>
+    pub signal_command_buffer: RefCell<VecDeque<SignalCommand>>,
+    pub entity_purgatory: RefCell<VecDeque<hecs::Entity>>
 }
 
 impl GlobalContext {
+
+}
+
+impl GlobalContext {
+    pub(crate) fn enqueue_to_remove(&self, entity: hecs::Entity) {
+        self.entity_purgatory.borrow_mut().push_back(entity);
+    }
+
     pub fn flush_command_queues(&self) {
         let mut signal_commands = self.signal_command_buffer.borrow_mut();
         while !signal_commands.is_empty() {
@@ -65,6 +73,12 @@ impl GlobalContext {
                     signal
                 )),
             };
+        }
+
+        let mut dead_entities = self.entity_purgatory.borrow_mut();
+        while !dead_entities.is_empty() {
+            let next_entity = dead_entities.pop_front().unwrap();
+            self.world.borrow_mut().despawn(next_entity).unwrap();
         }
     }
 }

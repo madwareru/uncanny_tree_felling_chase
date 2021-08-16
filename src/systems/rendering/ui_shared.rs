@@ -1,9 +1,7 @@
 use crate::core_subsystems::types::GlobalContext;
-use crate::core_subsystems::rendering::{DrawCommand, DrawCommandExtra, SceneCompositor};
-use crate::core_subsystems::atlas_serialization::{SubRect, AtlasDefinition};
+use crate::core_subsystems::rendering::{DrawCommand, DrawCommandExtra};
+use crate::core_subsystems::atlas_serialization::{SubRect};
 use crate::components::UiRect;
-use std::sync::Arc;
-use macroquad::prelude::Texture2D;
 
 #[inline]
 pub fn render_ui_background(ctx: &GlobalContext, ui_rect: &UiRect) {

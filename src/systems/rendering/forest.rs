@@ -1,16 +1,16 @@
 use crate::core_subsystems::types::GlobalContext;
-use crate::core_subsystems::rendering::{DrawCommand, DrawCommandExtra, Pivot, SceneCompositor};
+use crate::core_subsystems::rendering::{DrawCommand, DrawCommandExtra, Pivot};
 
 pub fn system(ctx: &GlobalContext) {
     let mut y = 0.0;
     let dy = ctx.atlas_definition.tile_height as f32;
     let dx = ctx.atlas_definition.tile_width as f32;
 
-    for idx in (0..ctx.tilemap.w*ctx.tilemap.h)
-        .step_by(ctx.tilemap.w)
+    for idx in (0..ctx.tilemap.borrow().w*ctx.tilemap.borrow().h)
+        .step_by(ctx.tilemap.borrow().w)
     {
-        for i in 0..ctx.tilemap.w {
-            let corner_tree = ctx.forest.corner_tree_data[idx + i];
+        for i in 0..ctx.tilemap.borrow().w {
+            let corner_tree = ctx.forest.borrow().corner_tree_data[idx + i];
             if let Some(&subrect) = ctx.atlas_definition.tree_sub_rects.get(&corner_tree) {
                 let x = i as f32 * dx;
                 let draw_command = DrawCommand {
@@ -29,7 +29,7 @@ pub fn system(ctx: &GlobalContext) {
                 ctx.scene_compositor.borrow_mut().enqueue(draw_command);
             }
 
-            let cell_tree = ctx.forest.cell_tree_data[idx + i];
+            let cell_tree = ctx.forest.borrow().cell_tree_data[idx + i];
             if let Some(&subrect) = ctx.atlas_definition.tree_sub_rects.get(&cell_tree) {
                 let x = i as f32 * dx + ctx.atlas_definition.tile_width as f32 / 2.0;
                 let draw_command = DrawCommand {

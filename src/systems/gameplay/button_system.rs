@@ -1,13 +1,7 @@
 use crate::core_subsystems::types::{GlobalContext, MenuScreen};
-use crate::core_subsystems::rendering::{DrawCommand, DrawCommandExtra, Pivot, SceneCompositor};
-use crate::systems::rendering::ui_shared::{render_ui_background, render_idle_button_background, render_clicked_button_background, render_hover_button_background};
-use crate::components::{UiRect, MenuBackgroundTag, SignalButton, PlayGameSignal, ExitGameSignal, MenuScreenElement, ChoosePlayerFractionSignal, GoToMainMenuSignal, PauseGameSignal, UnpauseGameSignal, ChooseUnitTypeDuringLanding, ReplayGameSignal, SignalCommand};
-use hecs::{Entity, World};
+use crate::components::{UiRect, SignalButton, PlayGameSignal, ExitGameSignal, MenuScreenElement, ChoosePlayerFractionSignal, GoToMainMenuSignal, PauseGameSignal, UnpauseGameSignal, ChooseUnitTypeDuringLanding, ReplayGameSignal, SignalCommand};
 use crate::core_subsystems::peek_utils::peek_tile;
-use macroquad::input::{is_mouse_button_down, MouseButton, is_mouse_button_released};
-use crate::core_subsystems::atlas_serialization::AtlasDefinition;
-use std::sync::Arc;
-use macroquad::prelude::Texture2D;
+use macroquad::input::{MouseButton, is_mouse_button_released};
 
 pub fn system(ctx: &GlobalContext) {
     if let Some(menu_screen) = ctx.game_state.borrow().get_menu_screen() {

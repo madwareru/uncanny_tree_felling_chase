@@ -1,5 +1,5 @@
 use crate::core_subsystems::types::GlobalContext;
-use crate::core_subsystems::rendering::{DrawCommand, DrawCommandExtra, Pivot, SceneCompositor};
+use crate::core_subsystems::rendering::{DrawCommand, DrawCommandExtra, Pivot};
 
 pub fn system(ctx: &GlobalContext) {
     render_borders(ctx);
@@ -11,7 +11,7 @@ fn render_title(ctx: &GlobalContext) {
     let draw_command = DrawCommand {
         tex: ctx.ui_atlas_texture,
         subrect: ctx.atlas_definition.game_title_subrect,
-        x: (ctx.atlas_definition.tile_width * (ctx.tilemap.w / 2)) as f32,
+        x: (ctx.atlas_definition.tile_width * (ctx.tilemap.borrow().w / 2)) as f32,
         y: -1.75 * (ctx.atlas_definition.tile_height as f32),
         scale: 2.0,
         drawing_extra: DrawCommandExtra::DrawWithPivot {
@@ -24,9 +24,9 @@ fn render_title(ctx: &GlobalContext) {
 
 fn render_borders(ctx: &GlobalContext) {
     let y_top = 0.0;
-    let y_bottom = (ctx.atlas_definition.tile_height * (ctx.tilemap.h - 1)) as f32;
+    let y_bottom = (ctx.atlas_definition.tile_height * (ctx.tilemap.borrow().h - 1)) as f32;
     let x_left = 0.0;
-    let x_right = (ctx.atlas_definition.tile_width * (ctx.tilemap.w - 1)) as f32;
+    let x_right = (ctx.atlas_definition.tile_width * (ctx.tilemap.borrow().w - 1)) as f32;
 
     let draw_command = DrawCommand {
         tex: ctx.ui_atlas_texture,
@@ -72,7 +72,7 @@ fn render_borders(ctx: &GlobalContext) {
     };
     ctx.scene_compositor.borrow_mut().enqueue(draw_command);
 
-    for i in 1..ctx.tilemap.w - 1 {
+    for i in 1..ctx.tilemap.borrow().w - 1 {
         let draw_command = DrawCommand {
             tex: ctx.ui_atlas_texture,
             subrect: ctx.atlas_definition.ui_borders_3x3_1,
@@ -96,7 +96,7 @@ fn render_borders(ctx: &GlobalContext) {
         ctx.scene_compositor.borrow_mut().enqueue(draw_command);
     }
 
-    for j in 1..ctx.tilemap.h - 1 {
+    for j in 1..ctx.tilemap.borrow().h - 1 {
         let draw_command = DrawCommand {
             tex: ctx.ui_atlas_texture,
             subrect: ctx.atlas_definition.ui_borders_3x3_3,
@@ -124,16 +124,16 @@ fn render_borders(ctx: &GlobalContext) {
 // Dirty but we have no time to do it in other manner
 fn tile_outer_borders(ctx: &GlobalContext) {
     let y_top = 0.0;
-    let y_bottom = (ctx.atlas_definition.tile_height * (ctx.tilemap.h)) as f32;
+    let y_bottom = (ctx.atlas_definition.tile_height * (ctx.tilemap.borrow().h)) as f32;
     let x_left = 0.0;
-    let x_right = (ctx.atlas_definition.tile_width * (ctx.tilemap.w)) as f32;
+    let x_right = (ctx.atlas_definition.tile_width * (ctx.tilemap.borrow().w)) as f32;
 
     let draw_command = DrawCommand {
         tex: ctx.ui_atlas_texture,
         subrect: ctx.atlas_definition.ui_background_box_3x3_4,
         x: x_left,
         y: y_top,
-        scale: ctx.tilemap.h as f32,
+        scale: ctx.tilemap.borrow().h as f32,
         drawing_extra: DrawCommandExtra::DrawWithPivot {
             pivot: Pivot::Relative {rel_x: 1.0, rel_y: 0.0}
         },
@@ -145,7 +145,7 @@ fn tile_outer_borders(ctx: &GlobalContext) {
         subrect: ctx.atlas_definition.ui_background_box_3x3_4,
         x: x_left,
         y: y_top,
-        scale: ctx.tilemap.w as f32,
+        scale: ctx.tilemap.borrow().w as f32,
         drawing_extra: DrawCommandExtra::DrawWithPivot {
             pivot: Pivot::Relative {rel_x: 0.0, rel_y: 1.0}
         },
@@ -157,7 +157,7 @@ fn tile_outer_borders(ctx: &GlobalContext) {
         subrect: ctx.atlas_definition.ui_background_box_3x3_4,
         x: x_right,
         y: y_top,
-        scale: ctx.tilemap.w as f32,
+        scale: ctx.tilemap.borrow().w as f32,
         drawing_extra: DrawCommandExtra::DrawWithPivot {
             pivot: Pivot::Relative {rel_x: 0.0, rel_y: 1.0}
         },
@@ -169,7 +169,7 @@ fn tile_outer_borders(ctx: &GlobalContext) {
         subrect: ctx.atlas_definition.ui_background_box_3x3_4,
         x: x_right,
         y: y_top,
-        scale: ctx.tilemap.h as f32,
+        scale: ctx.tilemap.borrow().h as f32,
         drawing_extra: DrawCommandExtra::Draw,
         sorting_layer: 2
     };
@@ -179,7 +179,7 @@ fn tile_outer_borders(ctx: &GlobalContext) {
         subrect: ctx.atlas_definition.ui_background_box_3x3_4,
         x: x_left,
         y: y_top,
-        scale: ctx.tilemap.w as f32,
+        scale: ctx.tilemap.borrow().w as f32,
         drawing_extra: DrawCommandExtra::DrawWithPivot {
             pivot: Pivot::Relative {rel_x: 1.0, rel_y: 1.0}
         },
@@ -191,7 +191,7 @@ fn tile_outer_borders(ctx: &GlobalContext) {
         subrect: ctx.atlas_definition.ui_background_box_3x3_4,
         x: x_left,
         y: y_bottom,
-        scale: ctx.tilemap.w as f32,
+        scale: ctx.tilemap.borrow().w as f32,
         drawing_extra: DrawCommandExtra::Draw,
         sorting_layer: 2
     };
@@ -201,7 +201,7 @@ fn tile_outer_borders(ctx: &GlobalContext) {
         subrect: ctx.atlas_definition.ui_background_box_3x3_4,
         x: x_right,
         y: y_bottom,
-        scale: ctx.tilemap.w as f32,
+        scale: ctx.tilemap.borrow().w as f32,
         drawing_extra: DrawCommandExtra::Draw,
         sorting_layer: 2
     };
@@ -211,7 +211,7 @@ fn tile_outer_borders(ctx: &GlobalContext) {
         subrect: ctx.atlas_definition.ui_background_box_3x3_4,
         x: x_left,
         y: y_bottom,
-        scale: ctx.tilemap.w as f32,
+        scale: ctx.tilemap.borrow().w as f32,
         drawing_extra: DrawCommandExtra::DrawWithPivot {
             pivot: Pivot::Relative {rel_x: 1.0, rel_y: 0.0}
         },

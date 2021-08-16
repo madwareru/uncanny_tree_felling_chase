@@ -5,13 +5,9 @@ use core_subsystems::forest::Forest;
 use core_subsystems::rendering::SceneCompositor;
 use core_subsystems::tilemap::Tilemap;
 use core_subsystems::types::GlobalContext;
-use crate::components::{MenuBackgroundTag, UiRect, SignalButton, PlayGameSignal, ExitGameSignal, MenuScreenElement, SignalTag};
-use hecs::{World, Entity};
-use std::borrow::Borrow;
-use std::sync::Arc;
-use crate::core_subsystems::atlas_serialization::AtlasDefinition;
-use crate::core_subsystems::types::{MenuScreen, GameState};
-use std::cell::{RefCell, Ref};
+use crate::components::{MenuBackgroundTag, UiRect, SignalButton, PlayGameSignal, ExitGameSignal, MenuScreenElement, SignalTag, ChoosePlayerFractionSignal, GoToMainMenuSignal};
+use crate::core_subsystems::types::{MenuScreen, GameState, Fraction};
+use std::cell::{RefCell};
 use std::ops::Deref;
 use std::collections::VecDeque;
 
@@ -49,16 +45,17 @@ async fn main() {
     let scene_compositor = SceneCompositor::new();
 
     let mut global_context = GlobalContext {
-        tilemap,
-        forest,
         atlas_texture,
         draw_scale: 1.0 / 8.0,
         atlas_definition: atlas_definition.clone(),
         ui_atlas_texture,
+        tilemap: RefCell::new(tilemap),
+        forest: RefCell::new(forest),
         scene_compositor: RefCell::new(scene_compositor),
         world: RefCell::new(hecs::World::new()),
         game_state: RefCell::new(GameState::MainMenu),
-        signal_command_buffer: RefCell::new(VecDeque::new())
+        signal_command_buffer: RefCell::new(VecDeque::new()),
+        entity_purgatory: RefCell::new(VecDeque::new())
     };
 
     create_ui_screens(&mut global_context);
@@ -75,8 +72,12 @@ async fn main() {
             break;
         }
         clear_background(Color::new(0.12, 0.1, 0.15, 1.00));
+        exec_system! [cleanup_signals];
+
         //exec_system! [rendering::tilemap];
         //exec_system! [rendering::forest];
+
+        exec_system! [gameplay::button_system];
 
         for (_, _) in global_context.world.borrow()
             .query::<(&SignalTag, &ExitGameSignal)>()
@@ -85,29 +86,44 @@ async fn main() {
             break 'main_loop;
         }
 
-        match global_context.game_state.borrow().deref() {
-            GameState::MainMenu => {
+        let next_state = 'state_search: loop {
+            match global_context.game_state.borrow().deref() {
+                GameState::MainMenu => {
+                    for (_, _) in global_context.world.borrow()
+                        .query::<(&SignalTag, &PlayGameSignal)>()
+                        .iter()
+                    {
+                        break 'state_search GameState::FractionChoice;
+                    }
+                    break 'state_search GameState::MainMenu;
+                }
+                GameState::FractionChoice => {
 
-            }
-            GameState::FractionChoice => {
+                    break 'state_search GameState::FractionChoice;
+                }
+                GameState::Battle { fraction, internal_state } => {
 
+                    break 'state_search GameState::Battle {
+                        fraction: *fraction,
+                        internal_state: *internal_state
+                    };
+                }
             }
-            GameState::Battle { .. } => {
+        };
 
-            }
-        }
+        *global_context.game_state.borrow_mut() = next_state;
 
         exec_system! [rendering::ui_overlay_main];
         exec_system! [rendering::menu_screens];
-        exec_system! [gameplay::button_system];
-
         exec_system! [scene_composition];
+
         next_frame().await;
     }
 }
 
 fn create_ui_screens(ctx: &GlobalContext) {
     create_main_menu_screen(ctx);
+    create_choose_fraction_screen(ctx);
 }
 
 fn create_main_menu_screen(ctx: &GlobalContext) {
@@ -116,7 +132,7 @@ fn create_main_menu_screen(ctx: &GlobalContext) {
         MenuBackgroundTag,
         UiRect {
             top_left: (20, 13),
-            bottom_right: (ctx.tilemap.w as i32 - 21, 24)
+            bottom_right: (ctx.tilemap.borrow().w as i32 - 21, 24)
         }
     ));
     ctx.world.borrow_mut().spawn((
@@ -127,7 +143,7 @@ fn create_main_menu_screen(ctx: &GlobalContext) {
         },
         UiRect {
             top_left: (22, 15),
-            bottom_right: (ctx.tilemap.w as i32 - 23, 18)
+            bottom_right: (ctx.tilemap.borrow().w as i32 - 23, 18)
         }
     ));
     ctx.world.borrow_mut().spawn((
@@ -138,7 +154,51 @@ fn create_main_menu_screen(ctx: &GlobalContext) {
         },
         UiRect {
             top_left: (22, 19),
-            bottom_right: (ctx.tilemap.w as i32 - 23, 22)
+            bottom_right: (ctx.tilemap.borrow().w as i32 - 23, 22)
+        }
+    ));
+}
+
+fn create_choose_fraction_screen(ctx: &GlobalContext) {
+    ctx.world.borrow_mut().spawn((
+        MenuScreenElement { menu_screen: MenuScreen::FractionChoice },
+        MenuBackgroundTag,
+        UiRect {
+            top_left: (10, 13),
+            bottom_right: (ctx.tilemap.borrow().w as i32 - 11, 24)
+        }
+    ));
+    ctx.world.borrow_mut().spawn((
+        MenuScreenElement { menu_screen: MenuScreen::FractionChoice },
+        SignalButton {
+            signal_to_send: ChoosePlayerFractionSignal{ fraction: Fraction::Red },
+            glyph_sub_rect: ctx.atlas_definition.red_button_subrect
+        },
+        UiRect {
+            top_left: (22 - 8, 15),
+            bottom_right: (37 - 8, 18)
+        }
+    ));
+    ctx.world.borrow_mut().spawn((
+        MenuScreenElement { menu_screen: MenuScreen::FractionChoice },
+        SignalButton {
+            signal_to_send: ChoosePlayerFractionSignal{ fraction: Fraction::Blue },
+            glyph_sub_rect: ctx.atlas_definition.blue_button_subrect
+        },
+        UiRect {
+            top_left: (22 + 8, 15),
+            bottom_right: (37 + 8, 18)
+        }
+    ));
+    ctx.world.borrow_mut().spawn((
+        MenuScreenElement { menu_screen: MenuScreen::FractionChoice },
+        SignalButton {
+            signal_to_send: GoToMainMenuSignal,
+            glyph_sub_rect: ctx.atlas_definition.back_button_subrect
+        },
+        UiRect {
+            top_left: (22, 19),
+            bottom_right: (37, 22)
         }
     ));
 }
