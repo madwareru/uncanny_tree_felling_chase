@@ -5,13 +5,15 @@ use core_subsystems::forest::Forest;
 use core_subsystems::rendering::SceneCompositor;
 use core_subsystems::tilemap::Tilemap;
 use core_subsystems::types::GlobalContext;
-use crate::components::{MenuBackgroundTag, UiRect, SignalButton, PlayGameSignal, ExitGameSignal, MenuScreenElement};
+use crate::components::{MenuBackgroundTag, UiRect, SignalButton, PlayGameSignal, ExitGameSignal, MenuScreenElement, SignalTag};
 use hecs::{World, Entity};
 use std::borrow::Borrow;
 use std::sync::Arc;
 use crate::core_subsystems::atlas_serialization::AtlasDefinition;
 use crate::core_subsystems::types::{MenuScreen, GameState};
-use std::cell::RefCell;
+use std::cell::{RefCell, Ref};
+use std::ops::Deref;
+use std::collections::VecDeque;
 
 mod game_assets;
 mod core_subsystems;
@@ -55,7 +57,8 @@ async fn main() {
         ui_atlas_texture,
         scene_compositor: RefCell::new(scene_compositor),
         world: RefCell::new(hecs::World::new()),
-        game_state: RefCell::new(GameState::MainMenu)
+        game_state: RefCell::new(GameState::MainMenu),
+        signal_command_buffer: RefCell::new(VecDeque::new())
     };
 
     create_ui_screens(&mut global_context);
@@ -63,10 +66,11 @@ async fn main() {
     macro_rules! exec_system {
         ($($namespace: ident)::*) => {
             systems::$($namespace::)*system(&global_context);
+            global_context.flush_command_queues();
         }
     }
 
-    loop {
+    'main_loop: loop {
         if is_key_pressed(KeyCode::Escape) {
             break;
         }
@@ -74,8 +78,28 @@ async fn main() {
         //exec_system! [rendering::tilemap];
         //exec_system! [rendering::forest];
 
+        for (_, _) in global_context.world.borrow()
+            .query::<(&SignalTag, &ExitGameSignal)>()
+            .iter()
+        {
+            break 'main_loop;
+        }
+
+        match global_context.game_state.borrow().deref() {
+            GameState::MainMenu => {
+
+            }
+            GameState::FractionChoice => {
+
+            }
+            GameState::Battle { .. } => {
+
+            }
+        }
+
         exec_system! [rendering::ui_overlay_main];
         exec_system! [rendering::menu_screens];
+        exec_system! [gameplay::button_system];
 
         exec_system! [scene_composition];
         next_frame().await;

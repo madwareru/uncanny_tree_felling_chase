@@ -7,6 +7,9 @@ use crate::core_subsystems::forest::Forest;
 use crate::core_subsystems::rendering::SceneCompositor;
 use crate::core_subsystems::tilemap::Tilemap;
 use std::cell::RefCell;
+use std::collections::VecDeque;
+use hecs::DynamicBundle;
+use crate::components::{SignalCommand, SignalTag};
 
 pub type CustomBitSet = [u8; 32];
 
@@ -19,7 +22,51 @@ pub struct GlobalContext {
     pub draw_scale: f32,
     pub game_state: RefCell<GameState>,
     pub scene_compositor: RefCell<SceneCompositor>,
-    pub world: RefCell<hecs::World>
+    pub world: RefCell<hecs::World>,
+    pub signal_command_buffer: RefCell<VecDeque<SignalCommand>>
+}
+
+impl GlobalContext {
+    pub fn flush_command_queues(&self) {
+        let mut signal_commands = self.signal_command_buffer.borrow_mut();
+        while !signal_commands.is_empty() {
+            let next_command = signal_commands.pop_front().unwrap();
+            match next_command {
+                SignalCommand::ExitGame(signal) => self.world.borrow_mut().spawn((
+                    SignalTag,
+                    signal
+                )),
+                SignalCommand::PlayGame(signal) => self.world.borrow_mut().spawn((
+                    SignalTag,
+                    signal
+                )),
+                SignalCommand::ChoosePlayerFraction(signal) => self.world.borrow_mut().spawn((
+                    SignalTag,
+                    signal
+                )),
+                SignalCommand::ChooseUnitTypeDuringLanding(signal) => self.world.borrow_mut().spawn((
+                    SignalTag,
+                    signal
+                )),
+                SignalCommand::GoToMainMenu(signal) => self.world.borrow_mut().spawn((
+                    SignalTag,
+                    signal
+                )),
+                SignalCommand::PauseGame(signal) => self.world.borrow_mut().spawn((
+                    SignalTag,
+                    signal
+                )),
+                SignalCommand::UnpauseGame(signal) => self.world.borrow_mut().spawn((
+                    SignalTag,
+                    signal
+                )),
+                SignalCommand::ReplayGame(signal) => self.world.borrow_mut().spawn((
+                    SignalTag,
+                    signal
+                )),
+            };
+        }
+    }
 }
 
 #[derive(Copy, Clone, PartialEq)]
