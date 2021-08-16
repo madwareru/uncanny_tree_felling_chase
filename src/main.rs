@@ -5,8 +5,19 @@ use core_subsystems::forest::Forest;
 use core_subsystems::rendering::SceneCompositor;
 use core_subsystems::tilemap::Tilemap;
 use core_subsystems::types::GlobalContext;
-use crate::components::{MenuBackgroundTag, UiRect, SignalButton, PlayGameSignal, ExitGameSignal, MenuScreenElement, SignalTag, ChoosePlayerFractionSignal, GoToMainMenuSignal};
-use crate::core_subsystems::types::{MenuScreen, GameState, Fraction};
+use crate::components::{
+    MenuBackgroundTag,
+    UiRect,
+    SignalButton,
+    PlayGameSignal,
+    ExitGameSignal,
+    MenuScreenElement,
+    SignalTag,
+    ChoosePlayerFractionSignal,
+    GoToMainMenuSignal,
+    Glyph
+};
+use crate::core_subsystems::types::{MenuScreen, GameState, BattleState, Fraction};
 use std::cell::{RefCell};
 use std::ops::Deref;
 use std::collections::VecDeque;
@@ -98,10 +109,57 @@ async fn main() {
                     break 'state_search GameState::MainMenu;
                 }
                 GameState::FractionChoice => {
+                    for (_, _) in global_context.world.borrow()
+                        .query::<(&SignalTag, &GoToMainMenuSignal)>()
+                        .iter()
+                    {
+                        break 'state_search GameState::MainMenu;
+                    }
+
+                    for (_, (_, signal)) in global_context.world.borrow()
+                        .query::<(&SignalTag, &ChoosePlayerFractionSignal)>()
+                        .iter()
+                    {
+                        break 'state_search GameState::Battle {
+                            fraction: signal.fraction,
+                            internal_state: BattleState::MapGeneration
+                        };
+                    }
 
                     break 'state_search GameState::FractionChoice;
                 }
                 GameState::Battle { fraction, internal_state } => {
+                    match internal_state {
+                        BattleState::MapGeneration => {
+                            global_context.tilemap.borrow_mut().generate_new_map();
+                            global_context.forest.borrow_mut().plant_trees(
+                                &global_context.tilemap.borrow()
+                            );
+                            break 'state_search GameState::Battle {
+                                fraction: *fraction,
+                                internal_state: BattleState::EnemyLanding
+                            };
+                        }
+                        BattleState::EnemyLanding => {
+                            // todo: Land enemies
+                            break 'state_search GameState::Battle {
+                                fraction: *fraction,
+                                internal_state: BattleState::PlayerLanding {
+                                    current_minion_is_big: false
+                                }
+                            };
+                        }
+                        BattleState::PlayerLanding { .. } => {}
+                        BattleState::BattlePause => {}
+                        BattleState::Defeat => {}
+                        BattleState::Victory => {}
+                        BattleState::Simulation { .. } => {}
+                    }
+
+                    if *internal_state != BattleState::MapGeneration {
+                        exec_system! [rendering::tilemap];
+                        exec_system! [rendering::forest];
+                    }
 
                     break 'state_search GameState::Battle {
                         fraction: *fraction,
@@ -162,10 +220,18 @@ fn create_main_menu_screen(ctx: &GlobalContext) {
 fn create_choose_fraction_screen(ctx: &GlobalContext) {
     ctx.world.borrow_mut().spawn((
         MenuScreenElement { menu_screen: MenuScreen::FractionChoice },
+        Glyph { glyph_sub_rect: ctx.atlas_definition.choose_your_side_title_subrect},
+        UiRect {
+            top_left: (12, 11),
+            bottom_right: (ctx.tilemap.borrow().w as i32 - 13, 12)
+        }
+    ));
+    ctx.world.borrow_mut().spawn((
+        MenuScreenElement { menu_screen: MenuScreen::FractionChoice },
         MenuBackgroundTag,
         UiRect {
-            top_left: (10, 13),
-            bottom_right: (ctx.tilemap.borrow().w as i32 - 11, 24)
+            top_left: (12, 13),
+            bottom_right: (ctx.tilemap.borrow().w as i32 - 13, 24)
         }
     ));
     ctx.world.borrow_mut().spawn((

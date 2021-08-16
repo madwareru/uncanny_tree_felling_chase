@@ -105,6 +105,9 @@ pub struct AtlasDefinition {
     pub replay_button_subrect: SubRect,
     pub main_menu_button_subrect: SubRect,
     pub game_title_subrect: SubRect,
+    pub choose_your_side_title_subrect: SubRect,
+    pub victory_title_subrect: SubRect,
+    pub defeat_title_subrect: SubRect,
 
     pub ui_borders_3x3_0: SubRect,
     pub ui_borders_3x3_1: SubRect,

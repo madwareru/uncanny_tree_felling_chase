@@ -3,6 +3,7 @@ use crate::core_subsystems::atlas_serialization::SubRect;
 
 pub struct MenuBackgroundTag;
 pub struct SignalTag;
+pub struct SelectionTag;
 
 #[derive(Copy, Clone)]
 pub struct UiRect {
@@ -30,6 +31,11 @@ pub enum SignalCommand {
 #[derive(Copy, Clone)]
 pub struct SignalButton<TSignal: Copy + Clone> {
     pub signal_to_send: TSignal,
+    pub glyph_sub_rect: SubRect
+}
+
+#[derive(Copy, Clone)]
+pub struct Glyph {
     pub glyph_sub_rect: SubRect
 }
 

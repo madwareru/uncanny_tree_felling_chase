@@ -103,10 +103,12 @@ pub enum GameState {
 pub enum BattleState {
     MapGeneration,
     EnemyLanding,
-    PlayerLanding,
     BattlePause,
     Defeat,
     Victory,
+    PlayerLanding {
+        current_minion_is_big: bool
+    },
     Simulation {
         red_score: u16,
         blue_score: u16
@@ -139,7 +141,7 @@ impl BattleState {
         match self {
             BattleState::MapGeneration => None,
             BattleState::EnemyLanding => None,
-            BattleState::PlayerLanding => Some(MenuScreen::PlayerLanding),
+            BattleState::PlayerLanding { .. } => Some(MenuScreen::PlayerLanding),
             BattleState::BattlePause => Some(MenuScreen::BattlePause),
             BattleState::Defeat => Some(MenuScreen::Defeat),
             BattleState::Victory => Some(MenuScreen::Victory),

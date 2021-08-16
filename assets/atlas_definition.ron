@@ -544,6 +544,10 @@ AtlasDefinition(
     replay_button_subrect: SubRect (x: 0, y: 1408, width: 512, height: 256),
     main_menu_button_subrect: SubRect (x: 512, y: 1408, width: 512, height: 256),
     game_title_subrect: SubRect (x: 0, y: 1664, width: 1536, height: 256),
+    choose_your_side_title_subrect: SubRect (x: 1024, y: 1408, width: 1024, height: 256),
+    victory_title_subrect: SubRect (x: 896, y: 640, width: 512, height: 256),
+    defeat_title_subrect: SubRect (x: 896, y: 384, width: 512, height: 256),
+
     ui_borders_3x3_0: SubRect (x: 0, y: 0, width: 128, height: 128),
     ui_borders_3x3_1: SubRect (x: 128, y: 0, width: 128, height: 128),
     ui_borders_3x3_2: SubRect (x: 256, y: 0, width: 128, height: 128),
