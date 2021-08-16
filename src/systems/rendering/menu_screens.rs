@@ -1,7 +1,28 @@
 use crate::core_subsystems::types::{GlobalContext, MenuScreen};
 use crate::core_subsystems::rendering::{DrawCommand, DrawCommandExtra, Pivot};
-use crate::systems::rendering::ui_shared::{render_ui_background, render_idle_button_background, render_clicked_button_background, render_hover_button_background};
-use crate::components::{UiRect, MenuBackgroundTag, SignalButton, PlayGameSignal, ExitGameSignal, MenuScreenElement, ChoosePlayerFractionSignal, GoToMainMenuSignal, PauseGameSignal, UnpauseGameSignal, ChooseUnitTypeDuringLanding, ReplayGameSignal, Glyph};
+use crate::systems::rendering::ui_shared::{
+    render_ui_background,
+    render_idle_button_background,
+    render_clicked_button_background,
+    render_hover_button_background,
+    render_ui_selection
+};
+use crate::components::{
+    UiRect,
+    MenuBackgroundTag,
+    SignalButton,
+    PlayGameSignal,
+    ExitGameSignal,
+    MenuScreenElement,
+    ChoosePlayerFractionSignal,
+    GoToMainMenuSignal,
+    PauseGameSignal,
+    UnpauseGameSignal,
+    ChooseUnitTypeDuringLanding,
+    ReplayGameSignal,
+    Glyph,
+    SelectionTag
+};
 use crate::core_subsystems::peek_utils::peek_tile;
 use macroquad::input::{is_mouse_button_down, MouseButton};
 
@@ -16,6 +37,17 @@ pub fn system(ctx: &GlobalContext) {
                 continue;
             }
             render_ui_background(ctx, rect);
+        }
+
+        for (_, (_, menu_screen_element, rect)) in ctx.world.borrow().query::<(
+            &SelectionTag,
+            &MenuScreenElement,
+            &UiRect
+        )>().iter() {
+            if menu_screen != menu_screen_element.menu_screen {
+                continue;
+            }
+            render_ui_selection(ctx, rect);
         }
 
         for (_, (glyph, menu_screen_element, rect)) in ctx.world.borrow().query::<(
@@ -34,9 +66,9 @@ pub fn system(ctx: &GlobalContext) {
                     y: ctx.atlas_definition.tile_height as f32 * (0.5 + (rect.top_left.1 + rect.bottom_right.1) as f32 / 2.0),
                     scale: 2.0,
                     drawing_extra: DrawCommandExtra::DrawWithPivot {
-                        pivot: Pivot::Relative {rel_x: 0.5, rel_y: 0.5}
+                        pivot: Pivot::Relative { rel_x: 0.5, rel_y: 0.5 }
                     },
-                    sorting_layer: 4
+                    sorting_layer: 4,
                 }
             );
         }
@@ -52,7 +84,7 @@ pub fn system(ctx: &GlobalContext) {
 
         fn handle_signal_buttons<TSignal: 'static + Copy + Clone + Send + Sync>(
             ctx: &GlobalContext,
-            menu_screen: MenuScreen
+            menu_screen: MenuScreen,
         ) {
             for (_, (menu_screen_element, signal_button, rect)) in ctx.world.borrow().query::<(
                 &MenuScreenElement,
@@ -81,9 +113,9 @@ pub fn system(ctx: &GlobalContext) {
                         y: ctx.atlas_definition.tile_height as f32 * (0.5 + (rect.top_left.1 + rect.bottom_right.1) as f32 / 2.0),
                         scale: 2.0,
                         drawing_extra: DrawCommandExtra::DrawWithPivot {
-                            pivot: Pivot::Relative {rel_x: 0.5, rel_y: 0.5}
+                            pivot: Pivot::Relative { rel_x: 0.5, rel_y: 0.5 }
                         },
-                        sorting_layer: 4
+                        sorting_layer: 4,
                     }
                 );
             }
