@@ -1,5 +1,5 @@
 use crate::core_subsystems::types::{MenuScreen, Fraction};
-use crate::core_subsystems::atlas_serialization::SubRect;
+use macro_tiler::atlas::rect_handle::AtlasRectHandle;
 
 pub struct MenuBackgroundTag;
 pub struct SignalTag;
@@ -35,12 +35,12 @@ pub enum SignalCommand {
 #[derive(Copy, Clone)]
 pub struct SignalButton<TSignal: Copy + Clone> {
     pub signal_to_send: TSignal,
-    pub glyph_sub_rect: SubRect
+    pub rect_handle: AtlasRectHandle
 }
 
 #[derive(Copy, Clone)]
 pub struct Glyph {
-    pub glyph_sub_rect: SubRect
+    pub rect_handle: AtlasRectHandle
 }
 
 #[derive(Copy, Clone)]

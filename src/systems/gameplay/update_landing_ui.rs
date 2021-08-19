@@ -8,6 +8,7 @@ use crate::components::{
     MenuScreenElement,
     ToggleButtonTag
 };
+use crate::core_subsystems::atlas_serialization::{UiTile, RED_DIGIT_GLYPH_TILES, BLUE_DIGIT_GLYPH_TILES};
 
 pub fn system(ctx: &GlobalContext) {
     if let GameState::Battle { fraction, internal_state } = *(ctx.game_state.borrow()) {
@@ -23,9 +24,9 @@ pub fn system(ctx: &GlobalContext) {
             &BudgetTitleTag,
             &mut Glyph,
         )>() {
-            glyph.glyph_sub_rect = match fraction {
-                Fraction::Red => ctx.atlas_definition.red_budget_title_subrect,
-                Fraction::Blue => ctx.atlas_definition.blue_budget_title_subrect,
+            glyph.rect_handle = match fraction {
+                Fraction::Red => ctx.ui_atlas.acquire_handle(&UiTile::RedBudgetTitle).unwrap(),
+                Fraction::Blue => ctx.ui_atlas.acquire_handle(&UiTile::BlueBudgetTitle).unwrap(),
             }
         }
 
@@ -35,10 +36,12 @@ pub fn system(ctx: &GlobalContext) {
             &mut Glyph,
         )>() {
             let digit_value = (budget as usize / 10usize.pow(digit.0)) % 10;
-            glyph.glyph_sub_rect = match fraction {
-                Fraction::Red => ctx.atlas_definition.red_digit_glyph_subrects[digit_value],
-                Fraction::Blue => ctx.atlas_definition.blue_digit_glyph_subrects[digit_value],
-            }
+            glyph.rect_handle = ctx.ui_atlas.acquire_handle(
+                match fraction {
+                    Fraction::Red => &RED_DIGIT_GLYPH_TILES[digit_value],
+                    Fraction::Blue => &BLUE_DIGIT_GLYPH_TILES[digit_value],
+                }
+            ).unwrap()
         }
 
         let (old_selection_entity, old_selection_size) = ctx.world.borrow()

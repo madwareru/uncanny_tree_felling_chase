@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use macroquad::prelude::*;
 
-use crate::core_subsystems::atlas_serialization::{AtlasDefinition};
+use crate::core_subsystems::atlas_serialization::{AtlasScheme, MainTile, UiTile};
 use crate::core_subsystems::forest::Forest;
 use crate::core_subsystems::rendering::SceneCompositor;
 use crate::core_subsystems::tilemap::Tilemap;
@@ -14,8 +14,14 @@ use crate::core_subsystems::units_serialization::UnitsConfig;
 pub type CustomBitSet = [u8; 32];
 
 pub struct GlobalContext {
-    pub atlas_definition: Arc<AtlasDefinition>,
+    pub atlas_scheme: Arc<AtlasScheme>,
     pub units_config: Arc<UnitsConfig>,
+
+    pub main_atlas_definition: Arc<macro_tiler::atlas::AtlasDefinition<MainTile>>,
+    pub ui_atlas_definition: Arc<macro_tiler::atlas::AtlasDefinition<UiTile>>,
+
+    pub main_atlas: Arc<macro_tiler::atlas::Atlas<MainTile>>,
+    pub ui_atlas: Arc<macro_tiler::atlas::Atlas<UiTile>>,
 
     pub game_state: RefCell<GameState>,
     pub scene_compositor: RefCell<SceneCompositor>,
@@ -26,8 +32,6 @@ pub struct GlobalContext {
     pub tilemap: RefCell<Tilemap>,
     pub passability_map: RefCell<Vec<u8>>,
 
-    pub atlas_texture: Texture2D,
-    pub ui_atlas_texture: Texture2D,
     pub draw_scale: f32,
     pub passability_atlas_width: usize,
     pub passability_atlas_height: usize,

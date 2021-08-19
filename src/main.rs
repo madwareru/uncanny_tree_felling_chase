@@ -16,7 +16,8 @@ use crate::core_subsystems::ui_layouts::{
 };
 use crate::core_subsystems::signal_utils::check_signal;
 use crate::components::{ExitGameSignal, PlayGameSignal, GoToMainMenuSignal, ChoosePlayerFractionSignal, ChooseUnitTypeDuringLanding};
-use crate::core_subsystems::rendering::{DrawCommand, DrawCommandExtra, Pivot};
+use macro_tiler::atlas::rect_handle::{Having, DrawSizeOverride, DrawPivot};
+use crate::core_subsystems::atlas_serialization::UiTile;
 
 mod game_assets;
 mod core_subsystems;
@@ -37,9 +38,11 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() {
     let game_assets::GameAssets{
+        main_atlas_definition,
+        ui_atlas_definition,
+        main_atlas,
+        ui_atlas,
         units_config, atlas_definition,
-        atlas_texture,
-        ui_atlas_texture,
         passability_atlas_width,
         passability_atlas_height,
         passability_atlas,
@@ -57,15 +60,17 @@ async fn main() {
     let scene_compositor = SceneCompositor::new();
 
     let mut global_context = GlobalContext {
-        atlas_texture,
+        main_atlas_definition,
+        ui_atlas_definition,
+        main_atlas,
+        ui_atlas,
         passability_atlas_width,
         passability_atlas_height,
         passability_atlas,
         passability_map_stride,
         draw_scale: 1.0 / 8.0,
-        ui_atlas_texture,
 
-        atlas_definition: atlas_definition.clone(),
+        atlas_scheme: atlas_definition.clone(),
         units_config: units_config.clone(),
 
         passability_map: RefCell::new(passability_map),
@@ -137,17 +142,15 @@ async fn main() {
                                     };
                                 }
                             }
-                            global_context.scene_compositor.borrow_mut().enqueue(DrawCommand {
-                                tex: global_context.ui_atlas_texture,
-                                subrect: global_context.atlas_definition.generate_in_progress_subrect,
-                                x: (global_context.tilemap.borrow().w / 2 * global_context.atlas_definition.tile_width) as f32,
-                                y: (global_context.tilemap.borrow().h / 2 * global_context.atlas_definition.tile_height) as f32,
-                                scale: 2.0,
-                                drawing_extra: DrawCommandExtra::DrawWithPivot {
-                                    pivot: Pivot::Relative {rel_x: 0.5, rel_y: 0.5},
-                                },
-                                sorting_layer: 20
-                            });
+                            let draw_command = macro_tiler::atlas::draw_command::builder()
+                                .having(DrawSizeOverride::ScaledUniform(2.0))
+                                .having(DrawPivot::Relative([0.5, 0.5].into()))
+                                .build(
+                                    global_context.ui_atlas.acquire_handle(&UiTile::GenerateInProgress).unwrap(),
+                                    (global_context.tilemap.borrow().w / 2 * global_context.atlas_scheme.tile_width) as f32,
+                                    (global_context.tilemap.borrow().h / 2 * global_context.atlas_scheme.tile_height) as f32
+                                );
+                            global_context.scene_compositor.borrow_mut().enqueue(20, draw_command);
                         }
                         BattleState::PreparePlayerLanding => {
                             exec_system! [gameplay::update_landing_ui];
@@ -195,7 +198,7 @@ async fn main() {
                 exec_system! [rendering::tilemap];
                 exec_system! [rendering::forest];
                 if let BattleState::PlayerLanding { .. } = internal_state {
-                    exec_system! [rendering::player_landing_helper_grid];
+                    //exec_system! [rendering::player_landing_helper_grid];
                 }
             }
             _ => {}

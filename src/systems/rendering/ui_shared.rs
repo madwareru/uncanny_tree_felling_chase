@@ -1,21 +1,21 @@
 use crate::core_subsystems::types::GlobalContext;
-use crate::core_subsystems::rendering::{DrawCommand, DrawCommandExtra};
-use crate::core_subsystems::atlas_serialization::{SubRect};
+use crate::core_subsystems::atlas_serialization::{UiTile};
 use crate::components::UiRect;
+use macro_tiler::atlas::rect_handle::AtlasRectHandle;
 
 pub fn render_ui_selection(ctx: &GlobalContext, ui_rect: &UiRect) {
     let box_sub_tiles = &[
-        ctx.atlas_definition.ui_selection_3x3_0,
-        ctx.atlas_definition.ui_selection_3x3_1,
-        ctx.atlas_definition.ui_selection_3x3_2,
+        ctx.ui_atlas.acquire_handle(&UiTile::UiSelection3x3_0).unwrap(),
+        ctx.ui_atlas.acquire_handle(&UiTile::UiSelection3x3_1).unwrap(),
+        ctx.ui_atlas.acquire_handle(&UiTile::UiSelection3x3_2).unwrap(),
 
-        ctx.atlas_definition.ui_selection_3x3_3,
-        ctx.atlas_definition.ui_selection_3x3_4,
-        ctx.atlas_definition.ui_selection_3x3_5,
+        ctx.ui_atlas.acquire_handle(&UiTile::UiSelection3x3_3).unwrap(),
+        ctx.ui_atlas.acquire_handle(&UiTile::UiSelection3x3_4).unwrap(),
+        ctx.ui_atlas.acquire_handle(&UiTile::UiSelection3x3_5).unwrap(),
 
-        ctx.atlas_definition.ui_selection_3x3_6,
-        ctx.atlas_definition.ui_selection_3x3_7,
-        ctx.atlas_definition.ui_selection_3x3_8
+        ctx.ui_atlas.acquire_handle(&UiTile::UiSelection3x3_6).unwrap(),
+        ctx.ui_atlas.acquire_handle(&UiTile::UiSelection3x3_7).unwrap(),
+        ctx.ui_atlas.acquire_handle(&UiTile::UiSelection3x3_8).unwrap()
     ];
     let &UiRect {
         top_left: (left_tile, top_tile),
@@ -23,16 +23,13 @@ pub fn render_ui_selection(ctx: &GlobalContext, ui_rect: &UiRect) {
     } = ui_rect;
     for j in top_tile..=bottom_tile {
         for i in left_tile..=right_tile {
-            let draw_command = DrawCommand {
-                tex: ctx.ui_atlas_texture,
-                subrect: choose_subrect(box_sub_tiles, left_tile, top_tile, right_tile, bottom_tile, j, i),
-                x: (ctx.atlas_definition.tile_height as i32 * i) as f32,
-                y: (ctx.atlas_definition.tile_height as i32 * j) as f32,
-                scale: 1.0,
-                drawing_extra: DrawCommandExtra::Draw,
-                sorting_layer: 4
-            };
-            ctx.scene_compositor.borrow_mut().enqueue(draw_command);
+            let draw_command = macro_tiler::atlas::draw_command::builder()
+                .build(
+                    choose_handle(box_sub_tiles, left_tile, top_tile, right_tile, bottom_tile, j, i),
+                    (ctx.atlas_scheme.tile_height as i32 * i) as f32,
+                    (ctx.atlas_scheme.tile_height as i32 * j) as f32
+                );
+            ctx.scene_compositor.borrow_mut().enqueue(5, draw_command);
         }
     }
 }
@@ -41,17 +38,17 @@ pub fn render_ui_selection(ctx: &GlobalContext, ui_rect: &UiRect) {
 pub fn render_ui_background(ctx: &GlobalContext, ui_rect: &UiRect) {
     render_box(ctx, ui_rect,
         &[
-            ctx.atlas_definition.ui_background_box_3x3_0,
-            ctx.atlas_definition.ui_background_box_3x3_1,
-            ctx.atlas_definition.ui_background_box_3x3_2,
+            ctx.ui_atlas.acquire_handle(&UiTile::UiBackgroundBox3x3_0).unwrap(),
+            ctx.ui_atlas.acquire_handle(&UiTile::UiBackgroundBox3x3_1).unwrap(),
+            ctx.ui_atlas.acquire_handle(&UiTile::UiBackgroundBox3x3_2).unwrap(),
 
-            ctx.atlas_definition.ui_background_box_3x3_3,
-            ctx.atlas_definition.ui_background_box_3x3_4,
-            ctx.atlas_definition.ui_background_box_3x3_5,
+            ctx.ui_atlas.acquire_handle(&UiTile::UiBackgroundBox3x3_3).unwrap(),
+            ctx.ui_atlas.acquire_handle(&UiTile::UiBackgroundBox3x3_4).unwrap(),
+            ctx.ui_atlas.acquire_handle(&UiTile::UiBackgroundBox3x3_5).unwrap(),
 
-            ctx.atlas_definition.ui_background_box_3x3_6,
-            ctx.atlas_definition.ui_background_box_3x3_7,
-            ctx.atlas_definition.ui_background_box_3x3_8
+            ctx.ui_atlas.acquire_handle(&UiTile::UiBackgroundBox3x3_6).unwrap(),
+            ctx.ui_atlas.acquire_handle(&UiTile::UiBackgroundBox3x3_7).unwrap(),
+            ctx.ui_atlas.acquire_handle(&UiTile::UiBackgroundBox3x3_8).unwrap()
         ]
     )
 }
@@ -60,17 +57,17 @@ pub fn render_ui_background(ctx: &GlobalContext, ui_rect: &UiRect) {
 pub fn render_idle_button_background(ctx: &GlobalContext, ui_rect: &UiRect) {
     render_box(ctx, ui_rect,
         &[
-            ctx.atlas_definition.button_3x3_idle_0,
-            ctx.atlas_definition.button_3x3_idle_1,
-            ctx.atlas_definition.button_3x3_idle_2,
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonIdle3x3_0).unwrap(),
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonIdle3x3_1).unwrap(),
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonIdle3x3_2).unwrap(),
 
-            ctx.atlas_definition.button_3x3_idle_3,
-            ctx.atlas_definition.button_3x3_idle_4,
-            ctx.atlas_definition.button_3x3_idle_5,
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonIdle3x3_3).unwrap(),
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonIdle3x3_4).unwrap(),
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonIdle3x3_5).unwrap(),
 
-            ctx.atlas_definition.button_3x3_idle_6,
-            ctx.atlas_definition.button_3x3_idle_7,
-            ctx.atlas_definition.button_3x3_idle_8
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonIdle3x3_6).unwrap(),
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonIdle3x3_7).unwrap(),
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonIdle3x3_8).unwrap()
         ]
     )
 }
@@ -79,17 +76,17 @@ pub fn render_idle_button_background(ctx: &GlobalContext, ui_rect: &UiRect) {
 pub fn render_hover_button_background(ctx: &GlobalContext, ui_rect: &UiRect) {
     render_box(ctx, ui_rect,
         &[
-            ctx.atlas_definition.button_3x3_hover_0,
-            ctx.atlas_definition.button_3x3_hover_1,
-            ctx.atlas_definition.button_3x3_hover_2,
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonHover3x3_0).unwrap(),
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonHover3x3_1).unwrap(),
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonHover3x3_2).unwrap(),
 
-            ctx.atlas_definition.button_3x3_hover_3,
-            ctx.atlas_definition.button_3x3_hover_4,
-            ctx.atlas_definition.button_3x3_hover_5,
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonHover3x3_3).unwrap(),
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonHover3x3_4).unwrap(),
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonHover3x3_5).unwrap(),
 
-            ctx.atlas_definition.button_3x3_hover_6,
-            ctx.atlas_definition.button_3x3_hover_7,
-            ctx.atlas_definition.button_3x3_hover_8
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonHover3x3_6).unwrap(),
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonHover3x3_7).unwrap(),
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonHover3x3_8).unwrap()
         ]
     )
 }
@@ -98,43 +95,48 @@ pub fn render_hover_button_background(ctx: &GlobalContext, ui_rect: &UiRect) {
 pub fn render_clicked_button_background(ctx: &GlobalContext, ui_rect: &UiRect) {
     render_box(ctx, ui_rect,
         &[
-            ctx.atlas_definition.button_3x3_clicked_0,
-            ctx.atlas_definition.button_3x3_clicked_1,
-            ctx.atlas_definition.button_3x3_clicked_2,
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonClicked3x3_0).unwrap(),
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonClicked3x3_1).unwrap(),
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonClicked3x3_2).unwrap(),
 
-            ctx.atlas_definition.button_3x3_clicked_3,
-            ctx.atlas_definition.button_3x3_clicked_4,
-            ctx.atlas_definition.button_3x3_clicked_5,
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonClicked3x3_3).unwrap(),
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonClicked3x3_4).unwrap(),
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonClicked3x3_5).unwrap(),
 
-            ctx.atlas_definition.button_3x3_clicked_6,
-            ctx.atlas_definition.button_3x3_clicked_7,
-            ctx.atlas_definition.button_3x3_clicked_8
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonClicked3x3_6).unwrap(),
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonClicked3x3_7).unwrap(),
+            ctx.ui_atlas.acquire_handle(&UiTile::ButtonClicked3x3_8).unwrap()
         ]
     )
 }
 
-fn render_box(ctx: &GlobalContext, ui_rect: &UiRect, box_sub_tiles: &[SubRect]) {
+fn render_box(ctx: &GlobalContext, ui_rect: &UiRect, box_sub_tiles: &[AtlasRectHandle]) {
     let &UiRect {
         top_left: (left_tile, top_tile),
         bottom_right: (right_tile, bottom_tile)
     } = ui_rect;
     for j in top_tile..=bottom_tile {
         for i in left_tile..=right_tile {
-            let draw_command = DrawCommand {
-                tex: ctx.ui_atlas_texture,
-                subrect: choose_subrect(box_sub_tiles, left_tile, top_tile, right_tile, bottom_tile, j, i),
-                x: (ctx.atlas_definition.tile_height as i32 * i) as f32,
-                y: (ctx.atlas_definition.tile_height as i32 * j) as f32,
-                scale: 1.0,
-                drawing_extra: DrawCommandExtra::Draw,
-                sorting_layer: 3
-            };
-            ctx.scene_compositor.borrow_mut().enqueue(draw_command);
+            let draw_command = macro_tiler::atlas::draw_command::builder()
+                .build(
+                    choose_handle(box_sub_tiles, left_tile, top_tile, right_tile, bottom_tile, j, i),
+                    (ctx.atlas_scheme.tile_height as i32 * i) as f32,
+                    (ctx.atlas_scheme.tile_height as i32 * j) as f32
+                );
+            ctx.scene_compositor.borrow_mut().enqueue(4, draw_command);
         }
     }
 }
 
-fn choose_subrect(box_sub_tiles: &[SubRect], left_tile: i32, top_tile: i32, right_tile: i32, bottom_tile: i32, j: i32, i: i32) -> SubRect {
+fn choose_handle(
+    box_sub_tiles: &[AtlasRectHandle],
+    left_tile: i32,
+    top_tile: i32,
+    right_tile: i32,
+    bottom_tile: i32,
+    j: i32,
+    i: i32
+) -> AtlasRectHandle {
     match j {
         jt if jt == top_tile => {
             match i {

@@ -1,5 +1,4 @@
 use crate::core_subsystems::types::{GlobalContext, MenuScreen};
-use crate::core_subsystems::rendering::{DrawCommand, DrawCommandExtra, Pivot};
 use crate::systems::rendering::ui_shared::{
     render_ui_background,
     render_idle_button_background,
@@ -10,6 +9,7 @@ use crate::systems::rendering::ui_shared::{
 use crate::components::{UiRect, MenuBackgroundTag, SignalButton, PlayGameSignal, ExitGameSignal, MenuScreenElement, ChoosePlayerFractionSignal, GoToMainMenuSignal, PauseGameSignal, UnpauseGameSignal, ChooseUnitTypeDuringLanding, ReplayGameSignal, Glyph, SelectionTag, FinishPlayerLandingSignal};
 use crate::core_subsystems::peek_utils::peek_tile;
 use macroquad::input::{is_mouse_button_down, MouseButton};
+use macro_tiler::atlas::rect_handle::{Having, DrawPivot, DrawSizeOverride};
 
 pub fn system(ctx: &GlobalContext) {
     if let Some(menu_screen) = ctx.game_state.borrow().get_menu_screen() {
@@ -43,19 +43,15 @@ pub fn system(ctx: &GlobalContext) {
             if menu_screen != menu_screen_element.menu_screen {
                 continue;
             }
-            ctx.scene_compositor.borrow_mut().enqueue(
-                DrawCommand {
-                    tex: ctx.ui_atlas_texture,
-                    subrect: glyph.glyph_sub_rect,
-                    x: ctx.atlas_definition.tile_width as f32 * (0.5 + (rect.top_left.0 + rect.bottom_right.0) as f32 / 2.0),
-                    y: ctx.atlas_definition.tile_height as f32 * (0.5 + (rect.top_left.1 + rect.bottom_right.1) as f32 / 2.0),
-                    scale: 2.0,
-                    drawing_extra: DrawCommandExtra::DrawWithPivot {
-                        pivot: Pivot::Relative { rel_x: 0.5, rel_y: 0.5 }
-                    },
-                    sorting_layer: 5,
-                }
-            );
+            let draw_command = macro_tiler::atlas::draw_command::builder()
+                .having(DrawPivot::Relative([0.5, 0.5].into()))
+                .having(DrawSizeOverride::ScaledUniform(2.0))
+                .build(
+                    glyph.rect_handle,
+                    ctx.atlas_scheme.tile_width as f32 * (0.5 + (rect.top_left.0 + rect.bottom_right.0) as f32 / 2.0),
+                    ctx.atlas_scheme.tile_height as f32 * (0.5 + (rect.top_left.1 + rect.bottom_right.1) as f32 / 2.0)
+                );
+            ctx.scene_compositor.borrow_mut().enqueue(6, draw_command);
         }
 
         handle_signal_buttons::<PlayGameSignal>(ctx, menu_screen);
@@ -91,19 +87,16 @@ pub fn system(ctx: &GlobalContext) {
                 } else {
                     render_idle_button_background(ctx, rect);
                 }
-                ctx.scene_compositor.borrow_mut().enqueue(
-                    DrawCommand {
-                        tex: ctx.ui_atlas_texture,
-                        subrect: signal_button.glyph_sub_rect,
-                        x: ctx.atlas_definition.tile_width as f32 * (0.5 + (rect.top_left.0 + rect.bottom_right.0) as f32 / 2.0),
-                        y: ctx.atlas_definition.tile_height as f32 * (0.5 + (rect.top_left.1 + rect.bottom_right.1) as f32 / 2.0),
-                        scale: 2.0,
-                        drawing_extra: DrawCommandExtra::DrawWithPivot {
-                            pivot: Pivot::Relative { rel_x: 0.5, rel_y: 0.5 }
-                        },
-                        sorting_layer: 4,
-                    }
-                );
+
+                let draw_command = macro_tiler::atlas::draw_command::builder()
+                    .having(DrawPivot::Relative([0.5, 0.5].into()))
+                    .having(DrawSizeOverride::ScaledUniform(2.0))
+                    .build(
+                        signal_button.rect_handle,
+                        ctx.atlas_scheme.tile_width as f32 * (0.5 + (rect.top_left.0 + rect.bottom_right.0) as f32 / 2.0),
+                        ctx.atlas_scheme.tile_height as f32 * (0.5 + (rect.top_left.1 + rect.bottom_right.1) as f32 / 2.0)
+                    );
+                ctx.scene_compositor.borrow_mut().enqueue(5, draw_command);
             }
         }
     }

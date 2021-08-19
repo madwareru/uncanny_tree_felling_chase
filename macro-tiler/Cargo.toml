@@ -1,17 +1,14 @@
 [package]
-name = "uncanny_tree_felling_chase"
+name = "macro-tiler"
 version = "0.1.0"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-paste = "1.0"
-macro-tiler = { path = "macro-tiler" }
-proc_macro_utils = { path = "proc_macro_utils" }
-simple-tiled-wfc = "0.7.7"
 macroquad = "0.3.8"
 serde = { version = "1.0", features = ["derive"] }
 ron = "0.6.4"
 image = "0.23.14"
-hecs = "0.6.0"
+bytemuck = "1.7.2"
+guillotiere = "0.6.2"

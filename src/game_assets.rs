@@ -1,25 +1,30 @@
 use {
     macroquad::prelude::*,
-    macroquad::miniquad::{TextureParams, TextureFormat, TextureWrap},
+    macroquad::miniquad::{TextureFormat, TextureWrap},
     ron::de::from_reader,
     std::sync::Arc
 };
-use macroquad::miniquad::Context;
-use crate::core_subsystems::atlas_serialization::AtlasDefinition;
+use crate::core_subsystems::atlas_serialization::{AtlasScheme, MainTile, UiTile};
 use crate::core_subsystems::units_serialization::UnitsConfig;
 
-const ATLAS_DEFINITION_BYTES: &[u8] = include_bytes!("../assets/atlas_definition.ron");
+const ATLAS_SCHEME_BYTES: &[u8] = include_bytes!("../assets/atlas_scheme.ron");
+const MAIN_ATLAS_DEFINITION_BYTES: &[u8] = include_bytes!("../assets/main_atlas.ron");
+const UI_ATLAS_DEFINITION_BYTES: &[u8] = include_bytes!("../assets/ui_atlas.ron");
 const UNITS_CONFIG_BYTES: &[u8] = include_bytes!("../assets/units_config.ron");
 
-const ATLAS_BYTES: &[u8] = include_bytes!("../assets/main_atlas.png");
-const UI_ATLAS_BYTES: &[u8] = include_bytes!("../assets/user_interface_atlas.png");
+const MAIN_ATLAS_BYTES: &[u8] = include_bytes!("../assets/main_atlas.png");
+const UI_ATLAS_BYTES: &[u8] = include_bytes!("../assets/ui_atlas.png");
 const PASSABILITY_MAP_BYTES: &[u8] = include_bytes!("../assets/passability_map.png");
 
 pub struct GameAssets {
+    pub main_atlas_definition: Arc<macro_tiler::atlas::AtlasDefinition<MainTile>>,
+    pub ui_atlas_definition: Arc<macro_tiler::atlas::AtlasDefinition<UiTile>>,
+
+    pub main_atlas: Arc<macro_tiler::atlas::Atlas<MainTile>>,
+    pub ui_atlas: Arc<macro_tiler::atlas::Atlas<UiTile>>,
+
     pub units_config: Arc<UnitsConfig>,
-    pub atlas_definition: Arc<AtlasDefinition>,
-    pub atlas_texture: Texture2D,
-    pub ui_atlas_texture: Texture2D,
+    pub atlas_definition: Arc<AtlasScheme>,
     pub passability_atlas_width: usize,
     pub passability_atlas_height: usize,
     pub passability_atlas: Vec<u8>
@@ -27,15 +32,25 @@ pub struct GameAssets {
 
 impl GameAssets {
     pub(crate) fn load() -> Self {
-        let ctx: &mut macroquad::prelude::miniquad::Context = {
-            let InternalGlContext {
-                quad_context: ctx, ..
-            } = unsafe { get_internal_gl() };
-            ctx
-        };
+        let main_atlas_definition = Arc::new(from_reader(MAIN_ATLAS_DEFINITION_BYTES).unwrap());
+        let main_atlas = Arc::new(macro_tiler::atlas::Atlas::load(
+            &main_atlas_definition,
+            MAIN_ATLAS_BYTES,
+            3,
+            TextureFormat::RGBA8,
+            FilterMode::Linear,
+            TextureWrap::Clamp
+        ));
 
-        let atlas_texture = GameAssets::load_png_texture(ctx, ATLAS_BYTES);
-        let ui_atlas_texture = GameAssets::load_png_texture(ctx, UI_ATLAS_BYTES);
+        let ui_atlas_definition = Arc::new(from_reader(UI_ATLAS_DEFINITION_BYTES).unwrap());
+        let ui_atlas = Arc::new(macro_tiler::atlas::Atlas::load(
+            &ui_atlas_definition,
+            UI_ATLAS_BYTES,
+            3,
+            TextureFormat::RGBA8,
+            FilterMode::Linear,
+            TextureWrap::Clamp
+        ));
 
         let (
             passability_atlas_width,
@@ -44,12 +59,16 @@ impl GameAssets {
         ) = GameAssets::load_passability_atlas(PASSABILITY_MAP_BYTES);
 
         Self {
-            atlas_texture,
-            ui_atlas_texture,
+            main_atlas_definition,
+            ui_atlas_definition,
+
+            main_atlas,
+            ui_atlas,
+
             passability_atlas_width,
             passability_atlas_height,
             passability_atlas,
-            atlas_definition: Arc::new(from_reader(ATLAS_DEFINITION_BYTES).unwrap()),
+            atlas_definition: Arc::new(from_reader(ATLAS_SCHEME_BYTES).unwrap()),
             units_config: Arc::new(from_reader(UNITS_CONFIG_BYTES).unwrap())
         }
     }
@@ -64,29 +83,5 @@ impl GameAssets {
             img.into_raw().iter().skip(1)// check second component only
                 .step_by(4).map(|&it| if it > 0x88 { 0xFF } else { 0x00 }).collect::<Vec<_>>()
         )
-    }
-
-    fn load_png_texture(ctx: &mut Context, bytes: &[u8]) -> Texture2D {
-        let img = image::load_from_memory(bytes)
-            .unwrap_or_else(|e| panic!("{}", e))
-            .to_rgba8();
-
-        let img_w = img.width();
-        let img_h = img.height();
-
-        let atlas_texture = Texture2D::from_miniquad_texture(
-            miniquad::Texture::from_data_and_format(
-                ctx,
-                &img.into_raw(),
-                TextureParams {
-                    format: TextureFormat::RGBA8,
-                    wrap: TextureWrap::Clamp,
-                    filter: FilterMode::Nearest,
-                    width: img_w,
-                    height: img_h,
-                },
-            )
-        );
-        atlas_texture
     }
 }

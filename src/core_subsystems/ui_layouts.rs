@@ -1,5 +1,6 @@
 use crate::core_subsystems::types::{GlobalContext, MenuScreen, Fraction};
 use crate::components::{MenuScreenElement, MenuBackgroundTag, UiRect, SignalButton, PlayGameSignal, ExitGameSignal, Glyph, ChoosePlayerFractionSignal, GoToMainMenuSignal, NumberTag, BudgetTitleTag, BudgetDigitTag, FinishPlayerLandingSignal, SelectionTag, ChooseUnitTypeDuringLanding, ToggleButtonTag};
+use crate::core_subsystems::atlas_serialization::{UiTile, RED_DIGIT_GLYPH_TILES};
 
 pub fn create_main_menu_screen(ctx: &GlobalContext) {
     ctx.world.borrow_mut().spawn((
@@ -14,7 +15,7 @@ pub fn create_main_menu_screen(ctx: &GlobalContext) {
         MenuScreenElement { menu_screen: MenuScreen::MainMenu },
         SignalButton {
             signal_to_send: PlayGameSignal,
-            glyph_sub_rect: ctx.atlas_definition.play_button_subrect
+            rect_handle: ctx.ui_atlas.acquire_handle(&UiTile::PlayButtonLabel).unwrap()
         },
         UiRect {
             top_left: (22, 15),
@@ -25,7 +26,7 @@ pub fn create_main_menu_screen(ctx: &GlobalContext) {
         MenuScreenElement { menu_screen: MenuScreen::MainMenu },
         SignalButton {
             signal_to_send: ExitGameSignal,
-            glyph_sub_rect: ctx.atlas_definition.exit_button_subrect
+            rect_handle: ctx.ui_atlas.acquire_handle(&UiTile::ExitButtonLabel).unwrap()
         },
         UiRect {
             top_left: (22, 19),
@@ -37,7 +38,7 @@ pub fn create_main_menu_screen(ctx: &GlobalContext) {
 pub fn create_choose_fraction_screen(ctx: &GlobalContext) {
     ctx.world.borrow_mut().spawn((
         MenuScreenElement { menu_screen: MenuScreen::FractionChoice },
-        Glyph { glyph_sub_rect: ctx.atlas_definition.choose_your_side_title_subrect},
+        Glyph { rect_handle: ctx.ui_atlas.acquire_handle(&UiTile::ChooseYourSideTitle).unwrap()},
         UiRect {
             top_left: (12, 11),
             bottom_right: (ctx.tilemap.borrow().w as i32 - 13, 12)
@@ -55,7 +56,7 @@ pub fn create_choose_fraction_screen(ctx: &GlobalContext) {
         MenuScreenElement { menu_screen: MenuScreen::FractionChoice },
         SignalButton {
             signal_to_send: ChoosePlayerFractionSignal{ fraction: Fraction::Red },
-            glyph_sub_rect: ctx.atlas_definition.red_button_subrect
+            rect_handle: ctx.ui_atlas.acquire_handle(&UiTile::RedFractionButtonLabel).unwrap()
         },
         UiRect {
             top_left: (22 - 8, 15),
@@ -66,7 +67,7 @@ pub fn create_choose_fraction_screen(ctx: &GlobalContext) {
         MenuScreenElement { menu_screen: MenuScreen::FractionChoice },
         SignalButton {
             signal_to_send: ChoosePlayerFractionSignal{ fraction: Fraction::Blue },
-            glyph_sub_rect: ctx.atlas_definition.blue_button_subrect
+            rect_handle: ctx.ui_atlas.acquire_handle(&UiTile::BlueFractionButtonLabel).unwrap()
         },
         UiRect {
             top_left: (22 + 8, 15),
@@ -77,7 +78,7 @@ pub fn create_choose_fraction_screen(ctx: &GlobalContext) {
         MenuScreenElement { menu_screen: MenuScreen::FractionChoice },
         SignalButton {
             signal_to_send: GoToMainMenuSignal,
-            glyph_sub_rect: ctx.atlas_definition.back_button_subrect
+            rect_handle: ctx.ui_atlas.acquire_handle(&UiTile::BackButtonLabel).unwrap()
         },
         UiRect {
             top_left: (22, 19),
@@ -89,7 +90,7 @@ pub fn create_choose_fraction_screen(ctx: &GlobalContext) {
 pub fn create_player_landing_screen(ctx: &GlobalContext) {
     ctx.world.borrow_mut().spawn((
         MenuScreenElement { menu_screen: MenuScreen::PlayerLanding },
-        Glyph { glyph_sub_rect: ctx.atlas_definition.landing_title_subrect},
+        Glyph { rect_handle: ctx.ui_atlas.acquire_handle(&UiTile::LandingTitle).unwrap()},
         UiRect {
             top_left: (ctx.tilemap.borrow().w as i32 / 2, 36),
             bottom_right: (ctx.tilemap.borrow().w as i32 / 2, 40)
@@ -98,18 +99,22 @@ pub fn create_player_landing_screen(ctx: &GlobalContext) {
     ctx.world.borrow_mut().spawn((
         BudgetTitleTag,
         MenuScreenElement { menu_screen: MenuScreen::PlayerLanding },
-        Glyph { glyph_sub_rect: ctx.atlas_definition.red_budget_title_subrect},
+        Glyph { rect_handle: ctx.ui_atlas.acquire_handle(&UiTile::RedBudgetTitle).unwrap()},
         UiRect {
             top_left: (ctx.tilemap.borrow().w as i32 / 2, 40),
             bottom_right: (ctx.tilemap.borrow().w as i32 / 2, 41)
         }
     ));
     for i in 0..12 {
+        let handle = ctx.ui_atlas.acquire_handle(
+            &RED_DIGIT_GLYPH_TILES[0]
+        ).unwrap();
+
         ctx.world.borrow_mut().spawn((
             BudgetDigitTag,
             MenuScreenElement { menu_screen: MenuScreen::PlayerLanding },
             NumberTag((11 - i) as u32),
-            Glyph { glyph_sub_rect: ctx.atlas_definition.red_digit_glyph_subrects[0]},
+            Glyph { rect_handle: handle},
             UiRect {
                 top_left: (ctx.tilemap.borrow().w as i32 / 2 - 6 + i, 40),
                 bottom_right: (ctx.tilemap.borrow().w as i32 / 2 - 6 + i, 45)
@@ -122,7 +127,7 @@ pub fn create_player_landing_screen(ctx: &GlobalContext) {
         MenuScreenElement { menu_screen: MenuScreen::PlayerLanding },
         SignalButton {
             signal_to_send: ChooseUnitTypeDuringLanding{ new_minion_is_big: true },
-            glyph_sub_rect: ctx.atlas_definition.huge_axe_icon,
+            rect_handle: ctx.ui_atlas.acquire_handle(&UiTile::HugeAxeIcon).unwrap(),
 
         },
         UiRect {
@@ -137,7 +142,7 @@ pub fn create_player_landing_screen(ctx: &GlobalContext) {
         MenuScreenElement { menu_screen: MenuScreen::PlayerLanding },
         SignalButton {
             signal_to_send: ChooseUnitTypeDuringLanding{ new_minion_is_big: false },
-            glyph_sub_rect: ctx.atlas_definition.small_axe_icon,
+            rect_handle: ctx.ui_atlas.acquire_handle(&UiTile::SmallAxeIcon).unwrap(),
 
         },
         UiRect {
@@ -149,7 +154,7 @@ pub fn create_player_landing_screen(ctx: &GlobalContext) {
         MenuScreenElement { menu_screen: MenuScreen::PlayerLanding },
         SignalButton {
             signal_to_send: FinishPlayerLandingSignal,
-            glyph_sub_rect: ctx.atlas_definition.ready_button_subrect,
+            rect_handle: ctx.ui_atlas.acquire_handle(&UiTile::ReadyButtonLabel).unwrap(),
             
         },
         UiRect {
