@@ -10,3 +10,4 @@ pub mod signal_utils;
 
 pub mod atlas_serialization;
 pub mod units_serialization;
+pub mod animation_configuration;

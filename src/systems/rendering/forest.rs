@@ -1,6 +1,7 @@
 use crate::core_subsystems::types::GlobalContext;
 use crate::core_subsystems::atlas_serialization::{TreeType, MainTile};
 use macro_tiler::atlas::rect_handle::{Having, DrawPivot};
+use crate::core_subsystems::rendering::RenderLayer;
 
 pub fn system(ctx: &GlobalContext) {
     let mut y = 0.0;
@@ -26,10 +27,10 @@ pub fn system(ctx: &GlobalContext) {
             };
             if let Some(handle) = rect_handle {
                 let x = i as f32 * dx;
-                let draw_command = macro_tiler::atlas::draw_command::builder()
-                    .having(DrawPivot::Relative([0.5, 0.95].into()))
+                let draw_command = macro_tiler::atlas::draw_command::draw_command_builder()
+                    .having(DrawPivot::Relative([0.5, 0.9].into()))
                     .build(handle, x, y);
-                ctx.scene_compositor.borrow_mut().enqueue(1, draw_command);
+                ctx.scene_compositor.borrow_mut().enqueue(RenderLayer::MapObjects, draw_command);
             }
 
             let cell_tree = ctx.forest.borrow().cell_tree_data[idx + i];
@@ -47,10 +48,10 @@ pub fn system(ctx: &GlobalContext) {
             };
             if let Some(handle) = rect_handle {
                 let x = i as f32 * dx + ctx.atlas_scheme.tile_width as f32 / 2.0;
-                let draw_command = macro_tiler::atlas::draw_command::builder()
-                    .having(DrawPivot::Relative([0.5, 0.95].into()))
+                let draw_command = macro_tiler::atlas::draw_command::draw_command_builder()
+                    .having(DrawPivot::Relative([0.5, 0.9].into()))
                     .build(handle, x, y + ctx.atlas_scheme.tile_height as f32 / 2.0);
-                ctx.scene_compositor.borrow_mut().enqueue(1, draw_command);
+                ctx.scene_compositor.borrow_mut().enqueue(RenderLayer::MapObjects, draw_command);
             }
         }
         y += dy;

@@ -1,5 +1,6 @@
 use crate::core_subsystems::types::{MenuScreen, Fraction};
 use macro_tiler::atlas::rect_handle::AtlasRectHandle;
+use crate::core_subsystems::animation_configuration::{AnimationState, OrcAnimation};
 
 pub struct MenuBackgroundTag;
 pub struct SignalTag;
@@ -7,6 +8,41 @@ pub struct SelectionTag;
 pub struct BudgetDigitTag;
 pub struct BudgetTitleTag;
 pub struct ToggleButtonTag;
+pub struct FadeAroundMouseTag;
+
+#[derive(Copy, Clone)]
+pub struct Orc{
+    pub is_huge: bool,
+    pub fraction: Fraction
+}
+
+#[derive(Copy, Clone)]
+pub struct Animator {
+    pub animation: OrcAnimation,
+    pub state: AnimationState,
+    pub current_frame: usize,
+    pub current_ticks: usize,
+}
+
+#[derive(Copy, Clone)]
+pub struct Direction {
+    pub dir_x: i32,
+    pub dir_y: i32,
+}
+
+#[derive(Copy, Clone)]
+pub struct Position {
+    pub x: i32,
+    pub y: i32,
+}
+
+#[derive(Copy, Clone)]
+pub enum VisualLookDirection {
+    SouthEast = 0,
+    SouthWest = 1,
+    NorthEast = 2,
+    NorthWest = 3
+}
 
 #[derive(Copy, Clone)]
 pub struct UiRect {
@@ -40,7 +76,8 @@ pub struct SignalButton<TSignal: Copy + Clone> {
 
 #[derive(Copy, Clone)]
 pub struct Glyph {
-    pub rect_handle: AtlasRectHandle
+    pub rect_handle: AtlasRectHandle,
+    pub transparency: f32
 }
 
 #[derive(Copy, Clone)]

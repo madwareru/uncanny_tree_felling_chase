@@ -50,7 +50,7 @@ impl AtlasDrawCommandBuilder {
     }
 }
 
-pub fn builder() -> AtlasDrawCommandBuilder {
+pub fn draw_command_builder() -> AtlasDrawCommandBuilder {
     AtlasDrawCommandBuilder {
         draw_params: Default::default()
     }

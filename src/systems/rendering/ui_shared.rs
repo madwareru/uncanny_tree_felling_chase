@@ -2,6 +2,7 @@ use crate::core_subsystems::types::GlobalContext;
 use crate::core_subsystems::atlas_serialization::{UiTile};
 use crate::components::UiRect;
 use macro_tiler::atlas::rect_handle::AtlasRectHandle;
+use crate::core_subsystems::rendering::RenderLayer;
 
 pub fn render_ui_selection(ctx: &GlobalContext, ui_rect: &UiRect) {
     let box_sub_tiles = &[
@@ -23,13 +24,13 @@ pub fn render_ui_selection(ctx: &GlobalContext, ui_rect: &UiRect) {
     } = ui_rect;
     for j in top_tile..=bottom_tile {
         for i in left_tile..=right_tile {
-            let draw_command = macro_tiler::atlas::draw_command::builder()
+            let draw_command = macro_tiler::atlas::draw_command::draw_command_builder()
                 .build(
                     choose_handle(box_sub_tiles, left_tile, top_tile, right_tile, bottom_tile, j, i),
                     (ctx.atlas_scheme.tile_height as i32 * i) as f32,
                     (ctx.atlas_scheme.tile_height as i32 * j) as f32
                 );
-            ctx.scene_compositor.borrow_mut().enqueue(5, draw_command);
+            ctx.scene_compositor.borrow_mut().enqueue(RenderLayer::Custom(5), draw_command);
         }
     }
 }
@@ -117,13 +118,13 @@ fn render_box(ctx: &GlobalContext, ui_rect: &UiRect, box_sub_tiles: &[AtlasRectH
     } = ui_rect;
     for j in top_tile..=bottom_tile {
         for i in left_tile..=right_tile {
-            let draw_command = macro_tiler::atlas::draw_command::builder()
+            let draw_command = macro_tiler::atlas::draw_command::draw_command_builder()
                 .build(
                     choose_handle(box_sub_tiles, left_tile, top_tile, right_tile, bottom_tile, j, i),
                     (ctx.atlas_scheme.tile_height as i32 * i) as f32,
                     (ctx.atlas_scheme.tile_height as i32 * j) as f32
                 );
-            ctx.scene_compositor.borrow_mut().enqueue(4, draw_command);
+            ctx.scene_compositor.borrow_mut().enqueue(RenderLayer::Custom(4), draw_command);
         }
     }
 }

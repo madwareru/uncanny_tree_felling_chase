@@ -55,36 +55,104 @@ pub struct TileSides {
 
 #[derive(Copy, Clone, Deserialize)]
 pub struct TerrainTilesConfig {
-    pub x_offset: usize,
+    pub offset: usize,
     pub outer_type: TerrainType,
     pub inner_type: TerrainType,
 }
 
-pub const RED_DIGIT_GLYPH_TILES: &[UiTile] = &[
-    UiTile::RedDigitGlyph_0,
-    UiTile::RedDigitGlyph_1,
-    UiTile::RedDigitGlyph_2,
-    UiTile::RedDigitGlyph_3,
-    UiTile::RedDigitGlyph_4,
-    UiTile::RedDigitGlyph_5,
-    UiTile::RedDigitGlyph_6,
-    UiTile::RedDigitGlyph_7,
-    UiTile::RedDigitGlyph_8,
-    UiTile::RedDigitGlyph_9,
-];
+#[allow(non_camel_case_types)]
+#[derive(Copy, Clone, Debug, Deserialize, Hash, Eq, PartialEq)]
+pub enum OrcSprite {
+    RedOrcSmall_Idle,
+    RedOrcSmall_Hit_0,
+    RedOrcSmall_Hit_1,
+    RedOrcSmall_Hit_2,
+    RedOrcSmall_Hit_3,
+    RedOrcSmall_Hit_4,
+    RedOrcSmall_Hit_5,
+    RedOrcSmall_Hit_6,
 
-pub const BLUE_DIGIT_GLYPH_TILES: &[UiTile] = &[
-    UiTile::BlueDigitGlyph_0,
-    UiTile::BlueDigitGlyph_1,
-    UiTile::BlueDigitGlyph_2,
-    UiTile::BlueDigitGlyph_3,
-    UiTile::BlueDigitGlyph_4,
-    UiTile::BlueDigitGlyph_5,
-    UiTile::BlueDigitGlyph_6,
-    UiTile::BlueDigitGlyph_7,
-    UiTile::BlueDigitGlyph_8,
-    UiTile::BlueDigitGlyph_9,
-];
+    RedOrcHuge_Idle,
+    RedOrcHuge_Hit_0,
+    RedOrcHuge_Hit_1,
+    RedOrcHuge_Hit_2,
+    RedOrcHuge_Hit_3,
+    RedOrcHuge_Hit_4,
+    RedOrcHuge_Hit_5,
+    RedOrcHuge_Hit_6,
+
+    RedOrcSmall_IdleBack,
+    RedOrcSmall_HitBack_0,
+    RedOrcSmall_HitBack_1,
+    RedOrcSmall_HitBack_2,
+    RedOrcSmall_HitBack_3,
+    RedOrcSmall_HitBack_4,
+    RedOrcSmall_HitBack_5,
+    RedOrcSmall_HitBack_6,
+
+    RedOrcHuge_IdleBack,
+    RedOrcHuge_HitBack_0,
+    RedOrcHuge_HitBack_1,
+    RedOrcHuge_HitBack_2,
+    RedOrcHuge_HitBack_3,
+    RedOrcHuge_HitBack_4,
+    RedOrcHuge_HitBack_5,
+    RedOrcHuge_HitBack_6,
+
+    BlueOrcSmall_Idle,
+    BlueOrcSmall_Hit_0,
+    BlueOrcSmall_Hit_1,
+    BlueOrcSmall_Hit_2,
+    BlueOrcSmall_Hit_3,
+    BlueOrcSmall_Hit_4,
+    BlueOrcSmall_Hit_5,
+    BlueOrcSmall_Hit_6,
+
+    BlueOrcHuge_Idle,
+    BlueOrcHuge_Hit_0,
+    BlueOrcHuge_Hit_1,
+    BlueOrcHuge_Hit_2,
+    BlueOrcHuge_Hit_3,
+    BlueOrcHuge_Hit_4,
+    BlueOrcHuge_Hit_5,
+    BlueOrcHuge_Hit_6,
+
+    BlueOrcSmall_IdleBack,
+    BlueOrcSmall_HitBack_0,
+    BlueOrcSmall_HitBack_1,
+    BlueOrcSmall_HitBack_2,
+    BlueOrcSmall_HitBack_3,
+    BlueOrcSmall_HitBack_4,
+    BlueOrcSmall_HitBack_5,
+    BlueOrcSmall_HitBack_6,
+
+    BlueOrcHuge_IdleBack,
+    BlueOrcHuge_HitBack_0,
+    BlueOrcHuge_HitBack_1,
+    BlueOrcHuge_HitBack_2,
+    BlueOrcHuge_HitBack_3,
+    BlueOrcHuge_HitBack_4,
+    BlueOrcHuge_HitBack_5,
+    BlueOrcHuge_HitBack_6,
+}
+
+macro_rules! sequence_const{
+    { pub const $name:ident: &[$type:ident] = $id:ident ++ [$($lit:literal),*] } => {
+        paste::paste! {
+            pub const $name: &[$type] = &[
+                $($type :: [<$id $lit>]),*
+            ];
+        }
+    }
+}
+
+sequence_const! {
+    pub const RED_DIGIT_GLYPH_TILES: &[UiTile] = RedDigitGlyph_ ++ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+}
+
+sequence_const! {
+    pub const BLUE_DIGIT_GLYPH_TILES: &[UiTile] = BlueDigitGlyph_ ++ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+}
 
 #[allow(non_camel_case_types)]
 #[derive(Copy, Clone, Debug, Deserialize, Hash, Eq, PartialEq)]

@@ -3,6 +3,13 @@ use std::cmp::Ordering;
 use macro_tiler::atlas::draw_command::DrawCommand;
 use macro_tiler::atlas::rect_handle::{DrawSizeOverride, DrawParams};
 
+pub enum RenderLayer {
+    TileMap,
+    TileMapOverlay,
+    MapObjects,
+    Custom(usize)
+}
+
 pub struct SceneCompositor {
     layers: Vec<Vec<DrawCommand>>
 }
@@ -14,7 +21,13 @@ impl SceneCompositor {
         }
     }
 
-    pub fn enqueue(&mut self, layer: usize, command: DrawCommand) {
+    pub fn enqueue(&mut self, layer: RenderLayer, command: DrawCommand) {
+        let layer = match layer {
+            RenderLayer::TileMap => 0,
+            RenderLayer::TileMapOverlay => 1,
+            RenderLayer::MapObjects => 2,
+            RenderLayer::Custom(offset) => 3 + offset
+        };
         assert!(layer < 2048);
         self.layers[layer].push(command);
     }

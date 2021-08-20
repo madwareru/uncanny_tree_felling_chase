@@ -3,8 +3,8 @@ use {
     simple_tiled_wfc::grid_generation::{WfcContext, WfcContextBuilder, WfcModule},
     std::{
         sync::Arc,
-        sync::mpsc::{channel,}
-    }
+        sync::mpsc::{channel},
+    },
 };
 
 use crate::core_subsystems::atlas_serialization::*;
@@ -62,7 +62,6 @@ const TILES: &[MainTile] = &[
     MainTile::Land_GrassSharp_45,
     MainTile::Land_GrassSharp_46,
     MainTile::Land_GrassSharp_47,
-
     MainTile::GrassRound_GrassSharp_0,
     MainTile::GrassRound_GrassSharp_1,
     MainTile::GrassRound_GrassSharp_2,
@@ -111,7 +110,6 @@ const TILES: &[MainTile] = &[
     MainTile::GrassRound_GrassSharp_45,
     MainTile::GrassRound_GrassSharp_46,
     MainTile::GrassRound_GrassSharp_47,
-
     MainTile::Land_GrassRound_0,
     MainTile::Land_GrassRound_1,
     MainTile::Land_GrassRound_2,
@@ -160,7 +158,6 @@ const TILES: &[MainTile] = &[
     MainTile::Land_GrassRound_45,
     MainTile::Land_GrassRound_46,
     MainTile::Land_GrassRound_47,
-
     MainTile::Land_Water_0,
     MainTile::Land_Water_1,
     MainTile::Land_Water_2,
@@ -209,7 +206,6 @@ const TILES: &[MainTile] = &[
     MainTile::Land_Water_45,
     MainTile::Land_Water_46,
     MainTile::Land_Water_47,
-
     MainTile::VerticalBridge_0,
     MainTile::VerticalBridge_1,
     MainTile::VerticalBridge_2,
@@ -219,7 +215,6 @@ const TILES: &[MainTile] = &[
     MainTile::VerticalBridge_6,
     MainTile::VerticalBridge_7,
     MainTile::VerticalBridge_8,
-
     MainTile::HorizontalBridge_0,
     MainTile::HorizontalBridge_1,
     MainTile::HorizontalBridge_2,
@@ -240,14 +235,14 @@ pub struct Tilemap {
     is_generating: bool,
     tx: Sender<Result<Vec<usize>, WfcError>>,
     rc: Receiver<Result<Vec<usize>, WfcError>>,
-    modules: Vec<WfcModule<CustomBitSet>>
+    modules: Vec<WfcModule<CustomBitSet>>,
 }
 
 impl Tilemap {
     pub fn new(
         atlas_definition: Arc<AtlasScheme>,
         w: usize,
-        h: usize
+        h: usize,
     ) -> Self {
         let (tx, rc) = channel();
         let mut tile_sides = Vec::new();
@@ -293,7 +288,7 @@ impl Tilemap {
                 }
                 for j in 0..4 {
                     for i in 0..4 {
-                        tiles.push(TILES[i + j * 4 + tile_cfg.x_offset * 48]);
+                        tiles.push(TILES[i + j * 4 + tile_cfg.offset * 48]);
                     }
                 }
                 for offs in &[16, 32] {
@@ -301,7 +296,7 @@ impl Tilemap {
                         for ii in 0..2 {
                             for j in 0..2 {
                                 for i in 0..2 {
-                                    tiles.push(TILES[offs + i + ii * 2 + (j + jj * 2) * 4 + tile_cfg.x_offset * 48]);
+                                    tiles.push(TILES[offs + i + ii * 2 + (j + jj * 2) * 4 + tile_cfg.offset * 48]);
                                 }
                             }
                         }
@@ -324,7 +319,6 @@ impl Tilemap {
                 MainTile::VerticalBridge_6,
                 MainTile::VerticalBridge_7,
                 MainTile::VerticalBridge_8,
-
                 MainTile::HorizontalBridge_0,
                 MainTile::HorizontalBridge_1,
                 MainTile::HorizontalBridge_2,
@@ -439,7 +433,7 @@ impl Tilemap {
         let tx2 = self.tx.clone();
 
         thread::spawn(
-            move||{
+            move || {
                 let mut wfc_context: WfcContext<CustomBitSet> = WfcContextBuilder
                 ::new(&modules, w, h)
                     .build();
@@ -448,7 +442,7 @@ impl Tilemap {
         );
     }
 
-    pub fn is_busy(&self) -> bool {self.is_generating }
+    pub fn is_busy(&self) -> bool { self.is_generating }
 
     pub fn poll(&mut self) -> bool {
         match self.rc.try_recv() {

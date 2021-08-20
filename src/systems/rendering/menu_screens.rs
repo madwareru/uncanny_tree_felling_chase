@@ -9,7 +9,8 @@ use crate::systems::rendering::ui_shared::{
 use crate::components::{UiRect, MenuBackgroundTag, SignalButton, PlayGameSignal, ExitGameSignal, MenuScreenElement, ChoosePlayerFractionSignal, GoToMainMenuSignal, PauseGameSignal, UnpauseGameSignal, ChooseUnitTypeDuringLanding, ReplayGameSignal, Glyph, SelectionTag, FinishPlayerLandingSignal};
 use crate::core_subsystems::peek_utils::peek_tile;
 use macroquad::input::{is_mouse_button_down, MouseButton};
-use macro_tiler::atlas::rect_handle::{Having, DrawPivot, DrawSizeOverride};
+use macro_tiler::atlas::rect_handle::{Having, DrawPivot, DrawSizeOverride, DrawColorOverride};
+use crate::core_subsystems::rendering::RenderLayer;
 
 pub fn system(ctx: &GlobalContext) {
     if let Some(menu_screen) = ctx.game_state.borrow().get_menu_screen() {
@@ -43,15 +44,16 @@ pub fn system(ctx: &GlobalContext) {
             if menu_screen != menu_screen_element.menu_screen {
                 continue;
             }
-            let draw_command = macro_tiler::atlas::draw_command::builder()
+            let draw_command = macro_tiler::atlas::draw_command::draw_command_builder()
                 .having(DrawPivot::Relative([0.5, 0.5].into()))
                 .having(DrawSizeOverride::ScaledUniform(2.0))
+                .having(DrawColorOverride::Alpha(glyph.transparency))
                 .build(
                     glyph.rect_handle,
                     ctx.atlas_scheme.tile_width as f32 * (0.5 + (rect.top_left.0 + rect.bottom_right.0) as f32 / 2.0),
                     ctx.atlas_scheme.tile_height as f32 * (0.5 + (rect.top_left.1 + rect.bottom_right.1) as f32 / 2.0)
                 );
-            ctx.scene_compositor.borrow_mut().enqueue(6, draw_command);
+            ctx.scene_compositor.borrow_mut().enqueue(RenderLayer::Custom(6), draw_command);
         }
 
         handle_signal_buttons::<PlayGameSignal>(ctx, menu_screen);
@@ -88,7 +90,7 @@ pub fn system(ctx: &GlobalContext) {
                     render_idle_button_background(ctx, rect);
                 }
 
-                let draw_command = macro_tiler::atlas::draw_command::builder()
+                let draw_command = macro_tiler::atlas::draw_command::draw_command_builder()
                     .having(DrawPivot::Relative([0.5, 0.5].into()))
                     .having(DrawSizeOverride::ScaledUniform(2.0))
                     .build(
@@ -96,7 +98,7 @@ pub fn system(ctx: &GlobalContext) {
                         ctx.atlas_scheme.tile_width as f32 * (0.5 + (rect.top_left.0 + rect.bottom_right.0) as f32 / 2.0),
                         ctx.atlas_scheme.tile_height as f32 * (0.5 + (rect.top_left.1 + rect.bottom_right.1) as f32 / 2.0)
                     );
-                ctx.scene_compositor.borrow_mut().enqueue(5, draw_command);
+                ctx.scene_compositor.borrow_mut().enqueue(RenderLayer::Custom(5), draw_command);
             }
         }
     }

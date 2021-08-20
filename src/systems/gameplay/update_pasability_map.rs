@@ -1,8 +1,6 @@
 use crate::core_subsystems::types::GlobalContext;
 
 pub fn system(ctx: &GlobalContext) {
-    ctx.passability_map.borrow_mut().fill(0x00);
-
     for j in 0..ctx.tilemap.borrow().h {
         for i in 0..ctx.tilemap.borrow().w {
             let idx = j * ctx.tilemap.borrow().w + i;
