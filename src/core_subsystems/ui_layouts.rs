@@ -1,5 +1,5 @@
 use crate::core_subsystems::types::{GlobalContext, MenuScreen, Fraction};
-use crate::components::{MenuScreenElement, MenuBackgroundTag, UiRect, SignalButton, PlayGameSignal, ExitGameSignal, Glyph, ChoosePlayerFractionSignal, GoToMainMenuSignal, NumberTag, BudgetTitleTag, BudgetDigitTag, FinishPlayerLandingSignal, SelectionTag, ChooseUnitTypeDuringLanding, ToggleButtonTag, ReplayGameSignal, FadeAroundMouseTag};
+use crate::components::{MenuScreenElement, MenuBackgroundTag, UiRect, SignalButton, PlayGameSignal, ExitGameSignal, Glyph, ChoosePlayerFractionSignal, GoToMainMenuSignal, NumberTag, BudgetTitleTag, BudgetDigitTag, FinishPlayerLandingSignal, SelectionTag, ChooseUnitTypeDuringLanding, ToggleButtonTag, ReplayGameSignal, FadeAroundMouseTag, ClearAllUnitsSignal};
 use crate::core_subsystems::atlas_serialization::{UiTile, RED_DIGIT_GLYPH_TILES};
 
 pub fn create_main_menu_screen(ctx: &GlobalContext) {
@@ -118,7 +118,7 @@ pub fn create_player_landing_screen(ctx: &GlobalContext) {
         },
         UiRect {
             top_left: (1, bottom),
-            bottom_right: (11, bottom + 3),
+            bottom_right: (13, bottom + 3),
         }
     ));
     ctx.world.borrow_mut().spawn((
@@ -129,7 +129,7 @@ pub fn create_player_landing_screen(ctx: &GlobalContext) {
         },
         UiRect {
             top_left: (15, bottom),
-            bottom_right: (25, bottom + 3),
+            bottom_right: (27, bottom + 3),
         }
     ));
     ctx.world.borrow_mut().spawn((
@@ -161,6 +161,18 @@ pub fn create_player_landing_screen(ctx: &GlobalContext) {
         ));
     }
     ctx.world.borrow_mut().spawn((
+        MenuScreenElement { menu_screen: MenuScreen::PlayerLanding },
+        SignalButton {
+            signal_to_send: ClearAllUnitsSignal,
+            rect_handle: ctx.ui_atlas.acquire_handle(&UiTile::ClearIcon).unwrap(),
+
+        },
+        UiRect {
+            top_left: (ctx.tilemap.borrow().w as i32 - 28, bottom),
+            bottom_right: (ctx.tilemap.borrow().w as i32 - 25, bottom + 3),
+        }
+    ));
+    ctx.world.borrow_mut().spawn((
         ToggleButtonTag,
         NumberTag(1),
         MenuScreenElement { menu_screen: MenuScreen::PlayerLanding },
@@ -170,8 +182,8 @@ pub fn create_player_landing_screen(ctx: &GlobalContext) {
 
         },
         UiRect {
-            top_left: (ctx.tilemap.borrow().w as i32 - 26, bottom),
-            bottom_right: (ctx.tilemap.borrow().w as i32 - 23, bottom + 3),
+            top_left: (ctx.tilemap.borrow().w as i32 - 23, bottom),
+            bottom_right: (ctx.tilemap.borrow().w as i32 - 20, bottom + 3),
         }
     ));
     ctx.world.borrow_mut().spawn((
@@ -184,8 +196,8 @@ pub fn create_player_landing_screen(ctx: &GlobalContext) {
             rect_handle: ctx.ui_atlas.acquire_handle(&UiTile::SmallAxeIcon).unwrap(),
         },
         UiRect {
-            top_left: (ctx.tilemap.borrow().w as i32 - 19, bottom),
-            bottom_right: (ctx.tilemap.borrow().w as i32 - 16, bottom + 3),
+            top_left: (ctx.tilemap.borrow().w as i32 - 18, bottom),
+            bottom_right: (ctx.tilemap.borrow().w as i32 - 15, bottom + 3),
         }
     ));
     ctx.world.borrow_mut().spawn((
@@ -193,10 +205,9 @@ pub fn create_player_landing_screen(ctx: &GlobalContext) {
         SignalButton {
             signal_to_send: FinishPlayerLandingSignal,
             rect_handle: ctx.ui_atlas.acquire_handle(&UiTile::ReadyButtonLabel).unwrap(),
-
         },
         UiRect {
-            top_left: (ctx.tilemap.borrow().w as i32 - 12, bottom),
+            top_left: (ctx.tilemap.borrow().w as i32 - 13, bottom),
             bottom_right: (ctx.tilemap.borrow().w as i32 - 2, bottom + 3),
         }
     ));

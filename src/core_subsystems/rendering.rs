@@ -3,6 +3,7 @@ use std::cmp::Ordering;
 use macro_tiler::atlas::draw_command::DrawCommand;
 use macro_tiler::atlas::rect_handle::{DrawSizeOverride, DrawParams};
 
+#[derive(Copy, Clone)]
 pub enum RenderLayer {
     TileMap,
     TileMapOverlay,

@@ -15,10 +15,11 @@ use crate::core_subsystems::ui_layouts::{
     create_player_landing_screen,
 };
 use crate::core_subsystems::signal_utils::check_signal;
-use crate::components::{ExitGameSignal, PlayGameSignal, GoToMainMenuSignal, ChoosePlayerFractionSignal, ChooseUnitTypeDuringLanding, ReplayGameSignal};
-use macro_tiler::atlas::rect_handle::{Having, DrawSizeOverride, DrawPivot, DrawRotation};
+use crate::components::{ExitGameSignal, PlayGameSignal, GoToMainMenuSignal, ChoosePlayerFractionSignal, ChooseUnitTypeDuringLanding, ReplayGameSignal, SpareBudgetSignal, GrowBudgetSignal, ClearAllUnitsSignal};
+use macro_tiler::atlas::rect_handle::{Having, DrawSizeOverride, DrawPivot};
 use crate::core_subsystems::atlas_serialization::UiTile;
 use crate::core_subsystems::rendering::RenderLayer;
+use crate::core_subsystems::player_landing_info::MapFieldOccupationData;
 
 mod game_assets;
 mod core_subsystems;
@@ -43,6 +44,7 @@ async fn main() {
         ui_atlas_definition,
         main_atlas,
         ui_atlas,
+        orc_atlas,
         units_config, atlas_definition,
         passability_atlas_width,
         passability_atlas_height,
@@ -54,7 +56,7 @@ async fn main() {
 
     next_frame().await;
     let tilemap = Tilemap::new(atlas_definition.clone(), MAP_SIZE[0], MAP_SIZE[1]);
-    let forest = Forest::create(&tilemap);
+    let forest = Forest::create(&tilemap, units_config.clone());
     let passability_map_stride = atlas_definition.tile_width * tilemap.w;
     let passability_map = vec![0x00u8; passability_map_stride * tilemap.h * atlas_definition.tile_height];
 
@@ -65,6 +67,7 @@ async fn main() {
         ui_atlas_definition,
         main_atlas,
         ui_atlas,
+        orc_atlas,
         passability_atlas_width,
         passability_atlas_height,
         passability_atlas,
@@ -74,6 +77,9 @@ async fn main() {
         atlas_scheme: atlas_definition.clone(),
         units_config: units_config.clone(),
 
+        landing_occupation_data: RefCell::new(
+            MapFieldOccupationData::new(tilemap.w * 2, tilemap.h * 2)
+        ),
         passability_map: RefCell::new(passability_map),
         tilemap: RefCell::new(tilemap),
         forest: RefCell::new(forest),
@@ -154,7 +160,9 @@ async fn main() {
                         }
                         BattleState::PreparePlayerLanding => {
                             exec_system![gameplay::update_landing_ui];
+                            exec_system![gameplay::eradicate_orcs];
                             exec_system![gameplay::update_pasability_map];
+                            exec_system![gameplay::prepare_landing_occupation];
                             break 'state_search GameState::Battle {
                                 fraction: *fraction,
                                 internal_state: BattleState::PlayerLanding {
@@ -163,18 +171,38 @@ async fn main() {
                                 },
                             };
                         }
-                        BattleState::PlayerLanding { budget, .. } => {
+                        BattleState::PlayerLanding { budget, current_minion_is_big} => {
+                            exec_system![gameplay::player_orc_landing];
                             exec_system![gameplay::update_landing_ui];
-                            if check_signal::<GoToMainMenuSignal>(&global_context).is_some() {
-                                break 'state_search GameState::MainMenu;
-                            }
-                            if check_signal::<ReplayGameSignal>(&global_context).is_some() {
+                            if check_signal::<ClearAllUnitsSignal>(&global_context).is_some() {
+                                global_context.landing_occupation_data.borrow_mut().clear_minions();
+                                exec_system![gameplay::eradicate_orcs];
                                 break 'state_search GameState::Battle {
                                     fraction: *fraction,
-                                    internal_state: BattleState::MapGeneration,
+                                    internal_state: BattleState::PlayerLanding {
+                                        budget: 100000,
+                                        current_minion_is_big: *current_minion_is_big,
+                                    },
                                 };
                             }
-
+                            if let Some(signal) = check_signal::<SpareBudgetSignal>(&global_context){
+                                break 'state_search GameState::Battle {
+                                    fraction: *fraction,
+                                    internal_state: BattleState::PlayerLanding {
+                                        budget: budget - signal.0,
+                                        current_minion_is_big: *current_minion_is_big
+                                    },
+                                };
+                            }
+                            if let Some(signal) = check_signal::<GrowBudgetSignal>(&global_context){
+                                break 'state_search GameState::Battle {
+                                    fraction: *fraction,
+                                    internal_state: BattleState::PlayerLanding {
+                                        budget: budget + signal.0,
+                                        current_minion_is_big: *current_minion_is_big
+                                    },
+                                };
+                            }
                             if let Some(signal) = check_signal::<ChooseUnitTypeDuringLanding>(&global_context) {
                                 break 'state_search GameState::Battle {
                                     fraction: *fraction,
@@ -184,11 +212,19 @@ async fn main() {
                                     },
                                 };
                             }
+                            if check_signal::<GoToMainMenuSignal>(&global_context).is_some() {
+                                break 'state_search GameState::MainMenu;
+                            }
+                            if check_signal::<ReplayGameSignal>(&global_context).is_some() {
+                                break 'state_search GameState::Battle {
+                                    fraction: *fraction,
+                                    internal_state: BattleState::MapGeneration,
+                                };
+                            }
                         }
                         BattleState::EnemyLanding => {
                             // todo: Land enemies
                         }
-                        BattleState::BattlePause => {}
                         BattleState::Defeat => {}
                         BattleState::Victory => {}
                         BattleState::Simulation { .. } => {}
@@ -206,9 +242,12 @@ async fn main() {
             GameState::Battle { internal_state: BattleState::MapGeneration, .. } => {}
             GameState::Battle { internal_state, .. } => {
                 exec_system![rendering::tilemap];
-                exec_system![rendering::forest];
+                exec_system![rendering::orc_visualization];
                 if let BattleState::PlayerLanding { .. } = internal_state {
+                    exec_system![rendering::forest_transparent];
                     exec_system![rendering::player_landing_helper_grid];
+                } else {
+                    exec_system![rendering::forest];
                 }
             }
             _ => {}

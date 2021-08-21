@@ -1,6 +1,7 @@
 use crate::core_subsystems::types::{MenuScreen, Fraction};
 use macro_tiler::atlas::rect_handle::AtlasRectHandle;
 use crate::core_subsystems::animation_configuration::{AnimationState, OrcAnimation};
+use crate::core_subsystems::atlas_serialization::TreeType;
 
 pub struct MenuBackgroundTag;
 pub struct SignalTag;
@@ -66,6 +67,7 @@ pub enum SignalCommand {
     PauseGame(PauseGameSignal),
     UnpauseGame(UnpauseGameSignal),
     ReplayGame(ReplayGameSignal),
+    ClearAllUnits(ClearAllUnitsSignal)
 }
 
 #[derive(Copy, Clone)]
@@ -117,6 +119,14 @@ impl Into<SignalCommand> for ChooseUnitTypeDuringLanding {
 }
 
 #[derive(Copy, Clone)]
+pub struct ClearAllUnitsSignal;
+impl Into<SignalCommand> for ClearAllUnitsSignal {
+    fn into(self) -> SignalCommand {
+        SignalCommand::ClearAllUnits(self)
+    }
+}
+
+#[derive(Copy, Clone)]
 pub struct FinishPlayerLandingSignal;
 impl Into<SignalCommand> for FinishPlayerLandingSignal {
     fn into(self) -> SignalCommand {
@@ -158,3 +168,9 @@ impl Into<SignalCommand> for ReplayGameSignal {
 
 #[derive(Copy, Clone)]
 pub struct NumberTag(pub u32);
+
+#[derive(Copy, Clone)]
+pub struct SpareBudgetSignal(pub u32);
+
+#[derive(Copy, Clone)]
+pub struct GrowBudgetSignal(pub u32);

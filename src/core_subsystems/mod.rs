@@ -1,3 +1,4 @@
+pub mod player_landing_info;
 pub mod forest;
 pub mod tilemap;
 pub mod rendering;

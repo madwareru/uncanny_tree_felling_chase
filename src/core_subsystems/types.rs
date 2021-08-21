@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use macroquad::prelude::*;
 
-use crate::core_subsystems::atlas_serialization::{AtlasScheme, MainTile, UiTile};
+use crate::core_subsystems::atlas_serialization::{AtlasScheme, MainTile, UiTile, OrcSprite};
 use crate::core_subsystems::forest::Forest;
 use crate::core_subsystems::rendering::SceneCompositor;
 use crate::core_subsystems::tilemap::Tilemap;
@@ -10,8 +10,9 @@ use std::cell::RefCell;
 use std::collections::VecDeque;
 use crate::components::{SignalCommand, SignalTag};
 use crate::core_subsystems::units_serialization::UnitsConfig;
+use crate::core_subsystems::player_landing_info::MapFieldOccupationData;
 
-pub type CustomBitSet = [u8; 32];
+pub type CustomBitSet = [u8; 27];
 
 pub struct GlobalContext {
     pub atlas_scheme: Arc<AtlasScheme>,
@@ -22,8 +23,10 @@ pub struct GlobalContext {
 
     pub main_atlas: Arc<macro_tiler::atlas::Atlas<MainTile>>,
     pub ui_atlas: Arc<macro_tiler::atlas::Atlas<UiTile>>,
+    pub orc_atlas: Arc<macro_tiler::atlas::Atlas<OrcSprite>>,
 
     pub game_state: RefCell<GameState>,
+    pub landing_occupation_data: RefCell<MapFieldOccupationData>,
     pub scene_compositor: RefCell<SceneCompositor>,
     pub world: RefCell<hecs::World>,
     pub signal_command_buffer: RefCell<VecDeque<SignalCommand>>,
@@ -85,6 +88,10 @@ impl GlobalContext {
                     SignalTag,
                     signal
                 )),
+                SignalCommand::ClearAllUnits(signal) => self.world.borrow_mut().spawn((
+                    SignalTag,
+                    signal
+                )),
             };
         }
 
@@ -115,7 +122,6 @@ pub enum GameState {
 #[derive(Copy, Clone, PartialEq)]
 pub enum BattleState {
     MapGeneration,
-    BattlePause,
     Defeat,
     Victory,
     PreparePlayerLanding,
@@ -125,6 +131,7 @@ pub enum BattleState {
     },
     EnemyLanding,
     Simulation {
+        is_paused: bool,
         red_score: u16,
         blue_score: u16
     },
@@ -157,10 +164,13 @@ impl BattleState {
             BattleState::MapGeneration => None,
             BattleState::EnemyLanding => None,
             BattleState::PlayerLanding { .. } => Some(MenuScreen::PlayerLanding),
-            BattleState::BattlePause => Some(MenuScreen::BattlePause),
             BattleState::Defeat => Some(MenuScreen::Defeat),
             BattleState::Victory => Some(MenuScreen::Victory),
-            BattleState::Simulation { .. } => Some(MenuScreen::BattleSimulation),
+            BattleState::Simulation { is_paused, .. } => if *is_paused {
+                Some(MenuScreen::BattlePause)
+            } else {
+                Some(MenuScreen::BattleSimulation)
+            },
             BattleState::PreparePlayerLanding => None
         }
     }

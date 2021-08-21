@@ -5,20 +5,36 @@ use {
 
 use crate::core_subsystems::atlas_serialization::TreeType;
 use crate::core_subsystems::tilemap::Tilemap;
+use std::sync::Arc;
+use crate::core_subsystems::units_serialization::UnitsConfig;
+
+#[derive(Copy, Clone)]
+pub struct Tree{
+    pub tree_type: TreeType,
+    pub health: i32
+}
+impl Tree {
+    pub const NONE: Self = Tree {
+        tree_type: TreeType::None,
+        health: 0
+    };
+}
 
 pub struct Forest {
-    pub corner_tree_data: Vec<TreeType>,
-    pub cell_tree_data: Vec<TreeType>,
+    pub corner_tree_data: Vec<Tree>,
+    pub cell_tree_data: Vec<Tree>,
+    units_config: Arc<UnitsConfig>,
     tree_probabilities: HashMap<TreeType, i32>,
     total_planted: usize
 }
 
 impl Forest {
-    pub fn create(tilemap: &Tilemap) -> Self {
+    pub fn create(tilemap: &Tilemap, units_config: Arc<UnitsConfig>) -> Self {
         Self {
+            units_config,
             total_planted: 0,
-            corner_tree_data: vec![TreeType::None; tilemap.w * tilemap.h],
-            cell_tree_data: vec![TreeType::None; tilemap.w * tilemap.h],
+            corner_tree_data: vec![Tree::NONE; tilemap.w * tilemap.h],
+            cell_tree_data: vec![Tree::NONE; tilemap.w * tilemap.h],
             tree_probabilities: {
                 let mut map = HashMap::new();
                 map.insert(TreeType::Bush, 4);
@@ -34,8 +50,8 @@ impl Forest {
         const FOREST_TILE_OFFSET_END: usize = 95;
 
         self.total_planted = 0;
-        self.cell_tree_data.fill(TreeType::None);
-        self.corner_tree_data.fill(TreeType::None);
+        self.cell_tree_data.fill(Tree::NONE);
+        self.corner_tree_data.fill(Tree::NONE);
 
         for j in 1..tilemap.h - 1 {
             for i in 1..tilemap.w - 1 {
@@ -70,14 +86,29 @@ impl Forest {
             )
     }
 
+    fn make_tree(&self, tree_type: TreeType) -> Tree {
+        self.units_config.tree_health
+            .get(&tree_type)
+            .map(| it | Tree {
+                tree_type,
+                health: *it
+            })
+            .unwrap_or( Tree {
+                tree_type,
+                health: 0
+            })
+    }
+
     fn try_plant_cell_tree(&mut self, idx: usize) {
-        self.cell_tree_data[idx] = self.try_plant();
-        self.total_planted += if self.cell_tree_data[idx] != TreeType::None { 1 } else { 0 };
+        let plant = self.try_plant();
+        self.cell_tree_data[idx] = self.make_tree(plant);
+        self.total_planted += if self.cell_tree_data[idx].tree_type != TreeType::None { 1 } else { 0 };
     }
 
     fn try_plant_corner_tree(&mut self, idx: usize) {
-        self.corner_tree_data[idx] = self.try_plant();
-        self.total_planted += if self.corner_tree_data[idx] != TreeType::None { 1 } else { 0 };
+        let plant = self.try_plant();
+        self.corner_tree_data[idx] = self.make_tree(plant);
+        self.total_planted += if self.corner_tree_data[idx].tree_type != TreeType::None { 1 } else { 0 };
     }
 
     pub fn total_planted(&self) -> usize { self.total_planted }

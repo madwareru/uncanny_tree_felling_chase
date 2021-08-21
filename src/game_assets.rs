@@ -4,16 +4,18 @@ use {
     ron::de::from_reader,
     std::sync::Arc
 };
-use crate::core_subsystems::atlas_serialization::{AtlasScheme, MainTile, UiTile};
+use crate::core_subsystems::atlas_serialization::{AtlasScheme, MainTile, UiTile, OrcSprite};
 use crate::core_subsystems::units_serialization::UnitsConfig;
 
 const ATLAS_SCHEME_BYTES: &[u8] = include_bytes!("../assets/atlas_scheme.ron");
 const MAIN_ATLAS_DEFINITION_BYTES: &[u8] = include_bytes!("../assets/main_atlas.ron");
 const UI_ATLAS_DEFINITION_BYTES: &[u8] = include_bytes!("../assets/ui_atlas.ron");
+const ORC_ATLAS_DEFINITION_BYTES: &[u8] = include_bytes!("../assets/unit_sprites.ron");
 const UNITS_CONFIG_BYTES: &[u8] = include_bytes!("../assets/units_config.ron");
 
 const MAIN_ATLAS_BYTES: &[u8] = include_bytes!("../assets/main_atlas.png");
 const UI_ATLAS_BYTES: &[u8] = include_bytes!("../assets/ui_atlas.png");
+const ORC_ATLAS_BYTES: &[u8] = include_bytes!("../assets/unit_sprites.png");
 const PASSABILITY_MAP_BYTES: &[u8] = include_bytes!("../assets/passability_map.png");
 
 pub struct GameAssets {
@@ -22,6 +24,7 @@ pub struct GameAssets {
 
     pub main_atlas: Arc<macro_tiler::atlas::Atlas<MainTile>>,
     pub ui_atlas: Arc<macro_tiler::atlas::Atlas<UiTile>>,
+    pub orc_atlas: Arc<macro_tiler::atlas::Atlas<OrcSprite>>,
 
     pub units_config: Arc<UnitsConfig>,
     pub atlas_definition: Arc<AtlasScheme>,
@@ -52,6 +55,16 @@ impl GameAssets {
             TextureWrap::Clamp
         ));
 
+        let orc_atlas_definition = Arc::new(from_reader(ORC_ATLAS_DEFINITION_BYTES).unwrap());
+        let orc_atlas = Arc::new(macro_tiler::atlas::Atlas::load(
+            &orc_atlas_definition,
+            ORC_ATLAS_BYTES,
+            3,
+            TextureFormat::RGBA8,
+            FilterMode::Linear,
+            TextureWrap::Clamp
+        ));
+
         let (
             passability_atlas_width,
             passability_atlas_height,
@@ -64,6 +77,7 @@ impl GameAssets {
 
             main_atlas,
             ui_atlas,
+            orc_atlas,
 
             passability_atlas_width,
             passability_atlas_height,

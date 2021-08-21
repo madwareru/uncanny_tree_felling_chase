@@ -258,6 +258,7 @@ pub enum UiTile {
 
     SmallAxeIcon,
     HugeAxeIcon,
+    ClearIcon,
 
     SelectedCell,
     BlockedCell,
