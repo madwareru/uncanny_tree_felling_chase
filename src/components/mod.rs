@@ -1,7 +1,6 @@
 use crate::core_subsystems::types::{MenuScreen, Fraction};
 use macro_tiler::atlas::rect_handle::AtlasRectHandle;
 use crate::core_subsystems::animation_configuration::{AnimationState, OrcAnimation};
-use crate::core_subsystems::atlas_serialization::TreeType;
 
 pub struct MenuBackgroundTag;
 pub struct SignalTag;

@@ -1,12 +1,9 @@
 use crate::core_subsystems::types::{GlobalContext, GameState, BattleState, Fraction};
-use std::cell::Ref;
-use std::borrow::Borrow;
 use crate::core_subsystems::units_serialization::OrcType;
 use crate::core_subsystems::peek_utils::peek_tile_ext;
 use crate::core_subsystems::player_landing_info::MapFieldOccupation;
 use macroquad::input::{MouseButton, is_mouse_button_down};
 use crate::components::{Position, Direction, Orc, SignalTag, SpareBudgetSignal, GrowBudgetSignal, Animator, VisualLookDirection};
-use std::ops::DerefMut;
 use crate::core_subsystems::animation_configuration::{OrcAnimation, AnimationState};
 
 pub fn system(ctx: &GlobalContext) {

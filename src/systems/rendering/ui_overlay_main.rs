@@ -3,7 +3,7 @@ use crate::core_subsystems::atlas_serialization::UiTile;
 use macro_tiler::atlas::rect_handle::{Having, DrawPivot, DrawSizeOverride};
 use macro_tiler::atlas::draw_command::draw_command_builder;
 use macroquad::prelude::{screen_width, screen_height};
-use crate::core_subsystems::rendering::RenderLayer;
+use crate::core_subsystems::rendering::{UiRenderLayer};
 
 pub fn system(ctx: &GlobalContext) {
     render_borders(ctx);
@@ -21,7 +21,7 @@ fn render_title(ctx: &GlobalContext) {
             (ctx.atlas_scheme.tile_width * (ctx.tilemap.borrow().w / 2)) as f32,
             -1.75 * (ctx.atlas_scheme.tile_height as f32),
         );
-    ctx.scene_compositor.borrow_mut().enqueue(RenderLayer::Custom(4), draw_command);
+    ctx.scene_compositor.borrow_mut().enqueue_ui(UiRenderLayer::Buttons, draw_command);
 }
 
 fn render_borders(ctx: &GlobalContext) {
@@ -32,24 +32,24 @@ fn render_borders(ctx: &GlobalContext) {
     let x_left = 0.0;
     let x_right = (ctx.atlas_scheme.tile_width * (ctx.tilemap.borrow().w - 2)) as f32;
 
-    ctx.scene_compositor.borrow_mut().enqueue(RenderLayer::Custom(3), draw_command_builder()
+    ctx.scene_compositor.borrow_mut().enqueue_ui(UiRenderLayer::Background, draw_command_builder()
         .having(DrawSizeOverride::ScaledUniform(2.0))
         .build(handle!(UiBorders3x3_0), x_left, y_top),
     );
-    ctx.scene_compositor.borrow_mut().enqueue(RenderLayer::Custom(3), draw_command_builder()
+    ctx.scene_compositor.borrow_mut().enqueue_ui(UiRenderLayer::Background, draw_command_builder()
         .having(DrawSizeOverride::ScaledUniform(2.0))
         .build(handle!(UiBorders3x3_2), x_right, y_top),
     );
-    ctx.scene_compositor.borrow_mut().enqueue(RenderLayer::Custom(3), draw_command_builder()
+    ctx.scene_compositor.borrow_mut().enqueue_ui(UiRenderLayer::Background, draw_command_builder()
         .having(DrawSizeOverride::ScaledUniform(2.0))
         .build(handle!(UiBorders3x3_6), x_left, y_bottom),
     );
-    ctx.scene_compositor.borrow_mut().enqueue(RenderLayer::Custom(3), draw_command_builder()
+    ctx.scene_compositor.borrow_mut().enqueue_ui(UiRenderLayer::Background, draw_command_builder()
         .having(DrawSizeOverride::ScaledUniform(2.0))
         .build(handle!(UiBorders3x3_8), x_right, y_bottom),
     );
 
-    ctx.scene_compositor.borrow_mut().enqueue(RenderLayer::Custom(3), draw_command_builder()
+    ctx.scene_compositor.borrow_mut().enqueue_ui(UiRenderLayer::Background, draw_command_builder()
         .having(
             DrawSizeOverride::ScaledNonUniform(
                 [(ctx.tilemap.borrow().w - 4) as f32, 2.0].into()
@@ -57,7 +57,7 @@ fn render_borders(ctx: &GlobalContext) {
         )
         .build(handle!(UiBorders3x3_1), ctx.atlas_scheme.tile_width as f32 * 2.0, y_top),
     );
-    ctx.scene_compositor.borrow_mut().enqueue(RenderLayer::Custom(3), draw_command_builder()
+    ctx.scene_compositor.borrow_mut().enqueue_ui(UiRenderLayer::Background, draw_command_builder()
         .having(
             DrawSizeOverride::ScaledNonUniform(
                 [(ctx.tilemap.borrow().w - 4) as f32, 2.0].into()
@@ -66,7 +66,7 @@ fn render_borders(ctx: &GlobalContext) {
         .build(handle!(UiBorders3x3_7), ctx.atlas_scheme.tile_width as f32 * 2.0, y_bottom),
     );
 
-    ctx.scene_compositor.borrow_mut().enqueue(RenderLayer::Custom(3), draw_command_builder()
+    ctx.scene_compositor.borrow_mut().enqueue_ui(UiRenderLayer::Background, draw_command_builder()
         .having(
             DrawSizeOverride::ScaledNonUniform(
                 [2.0, (ctx.tilemap.borrow().h - 4) as f32].into()
@@ -74,7 +74,7 @@ fn render_borders(ctx: &GlobalContext) {
         )
         .build(handle!(UiBorders3x3_3), x_left, ctx.atlas_scheme.tile_height as f32 * 2.0),
     );
-    ctx.scene_compositor.borrow_mut().enqueue(RenderLayer::Custom(3), draw_command_builder()
+    ctx.scene_compositor.borrow_mut().enqueue_ui(UiRenderLayer::Background, draw_command_builder()
         .having(
             DrawSizeOverride::ScaledNonUniform(
                 [2.0, (ctx.tilemap.borrow().h - 4) as f32].into()
@@ -99,7 +99,7 @@ fn tile_outer_borders(ctx: &GlobalContext) {
     let h_scale = (screen_height_in_tiles - ctx.tilemap.borrow().h as f32) / 2.0;
     let w_scale = (screen_width_in_tiles - ctx.tilemap.borrow().w as f32) / 2.0;
 
-    ctx.scene_compositor.borrow_mut().enqueue(RenderLayer::Custom(3), draw_command_builder()
+    ctx.scene_compositor.borrow_mut().enqueue_ui(UiRenderLayer::Background, draw_command_builder()
         .having(
             DrawSizeOverride::ScaledNonUniform(
                 [
@@ -115,7 +115,7 @@ fn tile_outer_borders(ctx: &GlobalContext) {
             (ctx.tilemap.borrow().h * ctx.atlas_scheme.tile_height) as f32,
         ),
     );
-    ctx.scene_compositor.borrow_mut().enqueue(RenderLayer::Custom(3), draw_command_builder()
+    ctx.scene_compositor.borrow_mut().enqueue_ui(UiRenderLayer::Background, draw_command_builder()
         .having(
             DrawSizeOverride::ScaledNonUniform(
                 [
@@ -127,7 +127,7 @@ fn tile_outer_borders(ctx: &GlobalContext) {
         .having(DrawPivot::BottomLeft)
         .build(handle!(UiBackgroundBox3x3_4), 0.0, 0.0),
     );
-    ctx.scene_compositor.borrow_mut().enqueue(RenderLayer::Custom(3), draw_command_builder()
+    ctx.scene_compositor.borrow_mut().enqueue_ui(UiRenderLayer::Background, draw_command_builder()
         .having(
             DrawSizeOverride::ScaledNonUniform(
                 [
@@ -142,7 +142,7 @@ fn tile_outer_borders(ctx: &GlobalContext) {
             0.0,
         ),
     );
-    ctx.scene_compositor.borrow_mut().enqueue(RenderLayer::Custom(3), draw_command_builder()
+    ctx.scene_compositor.borrow_mut().enqueue_ui(UiRenderLayer::Background, draw_command_builder()
         .having(
             DrawSizeOverride::ScaledNonUniform(
                 [

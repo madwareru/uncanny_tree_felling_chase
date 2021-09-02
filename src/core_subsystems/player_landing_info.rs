@@ -27,7 +27,7 @@ impl MapFieldOccupationData {
     }
     pub fn clear_minions(&mut self) {
         for entry in self.data.iter_mut() {
-            if let MapFieldOccupation::MinionLanded { entity, .. } = entry {
+            if let MapFieldOccupation::MinionLanded { .. } = entry {
                 *entry = MapFieldOccupation::Unoccupied;
             }
         }

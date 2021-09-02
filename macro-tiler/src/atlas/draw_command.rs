@@ -42,6 +42,12 @@ impl Having<DrawColorOverride> for AtlasDrawCommandBuilder {
     }
 }
 
+impl Having<DrawMaterialOverride> for AtlasDrawCommandBuilder {
+    fn having(self, new_sub_field: DrawMaterialOverride) -> Self {
+        Self{ draw_params: self.draw_params.having(new_sub_field) }
+    }
+}
+
 impl AtlasDrawCommandBuilder {
     pub fn build(self, handle: AtlasRectHandle, x: f32, y: f32) -> DrawCommand {
         DrawCommand {

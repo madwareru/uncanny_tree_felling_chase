@@ -2,7 +2,7 @@ use crate::core_subsystems::types::GlobalContext;
 use crate::core_subsystems::atlas_serialization::{UiTile};
 use crate::components::UiRect;
 use macro_tiler::atlas::rect_handle::{AtlasRectHandle, Having, DrawSizeOverride};
-use crate::core_subsystems::rendering::RenderLayer;
+use crate::core_subsystems::rendering::{UiRenderLayer};
 use macro_tiler::atlas::draw_command::draw_command_builder;
 
 #[inline]
@@ -19,7 +19,7 @@ pub fn render_ui_selection(ctx: &GlobalContext, ui_rect: &UiRect) {
                    ctx.ui_atlas.acquire_handle(&UiTile::UiSelection3x3_7).unwrap(),
                    ctx.ui_atlas.acquire_handle(&UiTile::UiSelection3x3_8).unwrap()
                ],
-               RenderLayer::Custom(5),
+               UiRenderLayer::ButtonSelection,
     );
 }
 
@@ -37,7 +37,7 @@ pub fn render_ui_background(ctx: &GlobalContext, ui_rect: &UiRect) {
                    ctx.ui_atlas.acquire_handle(&UiTile::UiBackgroundBox3x3_7).unwrap(),
                    ctx.ui_atlas.acquire_handle(&UiTile::UiBackgroundBox3x3_8).unwrap()
                ],
-               RenderLayer::Custom(4),
+               UiRenderLayer::Buttons,
     )
 }
 
@@ -55,7 +55,7 @@ pub fn render_idle_button_background(ctx: &GlobalContext, ui_rect: &UiRect) {
                    ctx.ui_atlas.acquire_handle(&UiTile::ButtonIdle3x3_7).unwrap(),
                    ctx.ui_atlas.acquire_handle(&UiTile::ButtonIdle3x3_8).unwrap()
                ],
-               RenderLayer::Custom(4),
+               UiRenderLayer::Buttons,
     )
 }
 
@@ -73,7 +73,7 @@ pub fn render_hover_button_background(ctx: &GlobalContext, ui_rect: &UiRect) {
                    ctx.ui_atlas.acquire_handle(&UiTile::ButtonHover3x3_7).unwrap(),
                    ctx.ui_atlas.acquire_handle(&UiTile::ButtonHover3x3_8).unwrap()
                ],
-               RenderLayer::Custom(4),
+               UiRenderLayer::Buttons,
     )
 }
 
@@ -91,7 +91,7 @@ pub fn render_clicked_button_background(ctx: &GlobalContext, ui_rect: &UiRect) {
                    ctx.ui_atlas.acquire_handle(&UiTile::ButtonClicked3x3_7).unwrap(),
                    ctx.ui_atlas.acquire_handle(&UiTile::ButtonClicked3x3_8).unwrap()
                ],
-               RenderLayer::Custom(4),
+               UiRenderLayer::Buttons,
     )
 }
 
@@ -99,7 +99,7 @@ fn render_box(
     ctx: &GlobalContext,
     ui_rect: &UiRect,
     box_sub_tiles: &[AtlasRectHandle],
-    render_layer: RenderLayer,
+    render_layer: UiRenderLayer,
 ) {
     let &UiRect {
         top_left: (left_tile, top_tile),
@@ -132,7 +132,7 @@ fn render_box(
             }
             None => draw_command_builder().build(handle, x, y)
         };
-        ctx.scene_compositor.borrow_mut().enqueue(render_layer, draw_command);
+        ctx.scene_compositor.borrow_mut().enqueue_ui(render_layer, draw_command);
     }
 }
 

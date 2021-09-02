@@ -18,7 +18,7 @@ use crate::core_subsystems::signal_utils::check_signal;
 use crate::components::{ExitGameSignal, PlayGameSignal, GoToMainMenuSignal, ChoosePlayerFractionSignal, ChooseUnitTypeDuringLanding, ReplayGameSignal, SpareBudgetSignal, GrowBudgetSignal, ClearAllUnitsSignal};
 use macro_tiler::atlas::rect_handle::{Having, DrawSizeOverride, DrawPivot};
 use crate::core_subsystems::atlas_serialization::UiTile;
-use crate::core_subsystems::rendering::RenderLayer;
+use crate::core_subsystems::rendering::{UiRenderLayer};
 use crate::core_subsystems::player_landing_info::MapFieldOccupationData;
 
 mod game_assets;
@@ -60,7 +60,16 @@ async fn main() {
     let passability_map_stride = atlas_definition.tile_width * tilemap.w;
     let passability_map = vec![0x00u8; passability_map_stride * tilemap.h * atlas_definition.tile_height];
 
-    let scene_compositor = SceneCompositor::new();
+    let mut scene_compositor = SceneCompositor::new();
+    let crt_material = load_material(
+        SHARED_POSTPROCESS_VERTEX_SHADER,
+        COLOR_SHIFT_FRAGMENT_SHADER,
+        MaterialParams {
+            uniforms: vec![("time".to_string(), UniformType::Float1)],
+            ..Default::default()
+        }
+    ).unwrap();
+    scene_compositor.set_postprocessing_material(crt_material);
 
     let mut global_context = GlobalContext {
         main_atlas_definition,
@@ -100,8 +109,6 @@ async fn main() {
     }
 
     'main_loop: loop {
-        clear_background(Color::new(0.12, 0.1, 0.15, 1.00));
-
         exec_system![cleanup_signals];
         exec_system![gameplay::button_system];
         exec_system![gameplay::glyph_fade];
@@ -156,7 +163,8 @@ async fn main() {
                                     (global_context.tilemap.borrow().w / 2 * global_context.atlas_scheme.tile_width) as f32,
                                     (global_context.tilemap.borrow().h / 2 * global_context.atlas_scheme.tile_height) as f32,
                                 );
-                            global_context.scene_compositor.borrow_mut().enqueue(RenderLayer::Custom(20), draw_command);
+                            global_context.scene_compositor.borrow_mut()
+                                .enqueue_ui(UiRenderLayer::Glyphs, draw_command);
                         }
                         BattleState::PreparePlayerLanding => {
                             exec_system![gameplay::update_landing_ui];
@@ -268,3 +276,9 @@ fn create_ui_screens(ctx: &GlobalContext) {
     create_choose_fraction_screen(ctx);
     create_player_landing_screen(ctx);
 }
+
+const SHARED_POSTPROCESS_VERTEX_SHADER: &'static str =
+    include_str!("../assets/post_process_shared.vert");
+
+const COLOR_SHIFT_FRAGMENT_SHADER: &'static str =
+    include_str!("../assets/post_process_day_night_cycle.frag");

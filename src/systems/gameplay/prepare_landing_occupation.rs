@@ -1,9 +1,6 @@
 use crate::core_subsystems::types::GlobalContext;
-use crate::core_subsystems::atlas_serialization::{TreeType, UiTile};
-use crate::core_subsystems::peek_utils::{peek_tile_ext};
+use crate::core_subsystems::atlas_serialization::{TreeType};
 use crate::core_subsystems::passability_utils::is_half_tile_passable;
-use macro_tiler::atlas::rect_handle::{Having, DrawSizeOverride, DrawPivot, DrawColorOverride};
-use crate::core_subsystems::rendering::RenderLayer;
 use crate::core_subsystems::player_landing_info::MapFieldOccupation;
 
 pub fn system(ctx: &GlobalContext) {

@@ -64,7 +64,7 @@ pub fn system(ctx: &GlobalContext) {
 fn make_draw_command(peek_x: f32, peek_y: f32, handle: AtlasRectHandle, x: f32, y: f32) -> DrawCommand {
     let alpha = {
         let (dx, dy) = (x - peek_x, y - peek_y);
-        let distance = (dx * dx + dy * dy);
+        let distance = dx * dx + dy * dy;
         (distance / 200000.0).clamp(0.1, 1.0)
     };
     draw_command_builder()

@@ -12,3 +12,5 @@ ron = "0.6.4"
 image = "0.23.14"
 bytemuck = "1.7.2"
 guillotiere = "0.6.2"
+naga = { version = "0.6", features = ["wgsl-in", "glsl-out"] }
+thiserror = "1.0"

@@ -1,0 +1,38 @@
+Shader(
+    precision: [Lowp(float)],
+    layouts: [
+        In(0, Vec3, "position"),
+        In(1, Vec2, "texcoord"),
+        In(2, Vec4, "color0")
+    ],
+    user_types: [],
+    uniforms: [
+        (Mat4, "Model"),
+        (Mat4, "Projection")
+    ],
+    inputs: [],
+    outputs: [
+        (Vec2, "uv"),
+        (Vec4, "color")
+    ],
+    functions: [
+        FuncDecl(
+            name: "main",
+            args: [],
+            bindings: {
+                "model_proj": Bind(Mat4, Mul(Name("Projection"), Name("Model")))
+            },
+            body: {
+                "gl_Position": Mul(
+                    Name("model_proj"),
+                    MakeVec4(operands: [Name("position"), FloatConst(1.0)])
+                ),
+                "color": Div(
+                    Name("color0"),
+                    FloatConst(255.0)
+                ),
+                "uv": Name("texcoord")
+            }
+        )
+    ]
+)
